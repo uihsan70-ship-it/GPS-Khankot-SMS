@@ -102,6 +102,8 @@ tr:nth-child(even) td{background:rgba(0,0,0,.015);}
 .classbtns{display:flex;gap:6px;overflow-x:auto;padding-bottom:4px;margin-bottom:10px;}
 .classbtn{flex:0 0 auto;padding:7px 13px;border-radius:20px;background:var(--bg);border:1px solid var(--line);color:var(--sub);font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap;}
 .classbtn.active{background:linear-gradient(135deg,var(--navy),var(--navy-2));color:#fff;border-color:var(--navy);}
+.chip-boy{display:inline-block;padding:4px 11px;border-radius:7px;font-size:12px;font-weight:700;color:#fff;background:linear-gradient(135deg,#2E6FE0,#5B9CFB);}
+.chip-girl{display:inline-block;padding:4px 11px;border-radius:7px;font-size:12px;font-weight:700;color:#fff;background:linear-gradient(135deg,#E0569E,#FB8FC4);}
 
 .dashgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px;}
 .dashcard{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:16px;text-align:center;}
@@ -224,6 +226,17 @@ if("serviceWorker" in navigator){ window.addEventListener("load", ()=> navigator
 const CLASS_LIST = ["Nursery","LKG","UKG","Class 1","Class 2","Class 3","Class 4","Class 5"];
 const EXAM_TERMS = ["Weekly Test","Mid-Term","Final Term"];
 let selectedTerm = EXAM_TERMS[0];
+let genderFilter = "";
+function sortByRoll(list){
+  return [...list].sort((a,b)=>{
+    const ra = parseInt(a.rollNo,10), rb = parseInt(b.rollNo,10);
+    const na = isNaN(ra), nb = isNaN(rb);
+    if(na && nb) return (a.name||"").localeCompare(b.name||"");
+    if(na) return 1;
+    if(nb) return -1;
+    return ra-rb;
+  });
+}
 
 let LANG = localStorage.getItem("gps_lms_lang") || "en";
 const TR = {
@@ -415,13 +428,14 @@ async function promoteAllStudents(){
 function viewStudents(){
   const base = classFilter ? students.filter(s=>s.className===classFilter) : students;
   const searched = window.__stuSearch ? base.filter(s=>s.name.toLowerCase().includes(window.__stuSearch.toLowerCase())) : base;
-  const list = searched.filter(s=>!s.archived);
+  const list = sortByRoll(searched.filter(s=>!s.archived));
   const archived = searched.filter(s=>s.archived);
   const rows = list.map(s=>`
     <tr>
       <td>${esc(s.rollNo||"-")}</td>
       <td>${s.photoUrl?`<img src="${s.photoUrl}" style="width:28px;height:28px;border-radius:50%;object-fit:cover;vertical-align:middle;margin-right:6px;">`:""}<span class="studlink" data-open="${s.id}">${esc(s.name)}</span></td>
       <td>${esc(s.className||"-")}</td>
+      <td><select data-editgender="${s.id}" style="padding:4px;font-size:12px;"><option value="">-</option><option value="Male" ${s.gender==="Male"?"selected":""}>Boy</option><option value="Female" ${s.gender==="Female"?"selected":""}>Girl</option></select></td>
       <td>${esc(s.guardianContact||"-")}</td>
       <td><button class="btn-danger" data-del="${s.id}">Archive</button>${CURRENT_ROLE==="admin"?` <button class="btn-danger" data-harddel="${s.id}">Delete</button>`:""}</td>
     </tr>`).join("");
@@ -440,6 +454,7 @@ function viewStudents(){
       <div class="row">
         <div><label>Roll number</label><input id="s_roll" placeholder="e.g. 14"></div>
         <div><label>Admission number</label><input id="s_admno" placeholder="e.g. GPS-2024-014"></div>
+        <div><label>Gender</label><select id="s_gender"><option value="">-</option><option value="Male">Male</option><option value="Female">Female</option></select></div>
       </div>
       <div class="row">
         <div><label>Date of birth</label><input id="s_dob" type="date"></div>
@@ -455,7 +470,7 @@ function viewStudents(){
         <div><label>Filter by class</label><select id="stuClassFilter"><option value="">All classes</option>${classOptions(classFilter)}</select></div>
       </div>
       <h2>Roster (${list.length})</h2>
-      ${list.length ? `<div class="table-wrap"><table><tr><th>Roll</th><th>Name</th><th>Class</th><th>Guardian</th><th></th></tr>${rows}</table></div>` : `<div class="empty">No students in this view yet.</div>`}
+      ${list.length ? `<div class="table-wrap"><table><tr><th>Roll</th><th>Name</th><th>Class</th><th>Gender</th><th>Guardian</th><th></th></tr>${rows}</table></div>` : `<div class="empty">No students in this view yet.</div>`}
     </div>
     ${archived.length ? `<div class="card"><h2>Archived (${archived.length}) — not deleted, just hidden</h2><div class="table-wrap"><table><tr><th>Name</th><th>Class</th><th></th></tr>${archRows}</table></div></div>` : ""}
   `;
@@ -471,15 +486,26 @@ async function addStudent(){
   const dob=document.getElementById("s_dob").value;
   const bloodGroup=document.getElementById("s_blood").value.trim();
   const emergencyContact=document.getElementById("s_emergency").value.trim();
-  await db.collection("students").add({name, className, guardianContact, rollNo, admissionNo, dob, bloodGroup, emergencyContact, fine:{amount:0,reason:"",paid:true}, grades:{}, attendance:{}, messages:[]});
+  const gender=document.getElementById("s_gender").value;
+  await db.collection("students").add({name, className, guardianContact, rollNo, admissionNo, dob, bloodGroup, emergencyContact, gender, fine:{amount:0,reason:"",paid:true}, grades:{}, attendance:{}, messages:[]});
 }
 
 // ---------------- ATTENDANCE ----------------
+function genderButtonsHtml(){
+  const opts = [["","All"],["Male","Boys"],["Female","Girls"]];
+  return `<div class="classbtns">${opts.map(([val,label])=>{
+    const active = genderFilter===val;
+    const cls = active ? (val==="Male"?"chip-boy":val==="Female"?"chip-girl":"chip-white") : "classbtn";
+    return `<div class="${cls}" style="cursor:pointer;" data-genderbtn="${val}">${label}</div>`;
+  }).join("")}</div>`;
+}
+
 function viewAttendance(){
-  const list = students.filter(s=>!classFilter || s.className===classFilter);
+  const list = sortByRoll(students.filter(s=>!s.archived && (!classFilter || s.className===classFilter) && (!genderFilter || s.gender===genderFilter)));
   const rows = list.map(s=>{
     const status = (s.attendance||{})[attDate] || "unmarked";
-    return `<tr><td>${esc(s.name)}</td><td>${esc(s.className||"-")}</td><td>
+    const nameChip = s.gender==="Male" ? `<span class="chip-boy" style="padding:2px 8px;">${esc(s.name)}</span>` : s.gender==="Female" ? `<span class="chip-girl" style="padding:2px 8px;">${esc(s.name)}</span>` : esc(s.name);
+    return `<tr><td>${esc(s.rollNo||"-")}</td><td>${nameChip}</td><td>${esc(s.className||"-")}</td><td>
       <button class="btn-sm ${status==='present'?'chip-green':''}" data-att="${s.id}|present">Present</button>
       <button class="btn-sm ${status==='absent'?'chip-red':''}" data-att="${s.id}|absent">Absent</button>
       <button class="btn-sm ${status==='leave'?'chip-blue':''}" data-att="${s.id}|leave">Leave</button>
@@ -491,10 +517,12 @@ function viewAttendance(){
         <div><label>Date</label><input type="date" id="attDatePick" value="${attDate}"></div>
         <div><label>Class</label><select id="attClassPick"><option value="">All classes</option>${classOptions(classFilter)}</select></div>
       </div>
+      <label>Filter by gender</label>
+      ${genderButtonsHtml()}
     </div>
     <div class="card">
       <h2>Mark attendance — ${attDate}</h2>
-      ${list.length ? `<div class="table-wrap"><table><tr><th>Name</th><th>Class</th><th>Status</th></tr>${rows}</table></div>` : `<div class="empty">No students in this class yet.</div>`}
+      ${list.length ? `<div class="table-wrap"><table><tr><th>Roll</th><th>Name</th><th>Class</th><th>Status</th></tr>${rows}</table></div>` : `<div class="empty">No students match this filter yet.</div>`}
     </div>
     <div class="card">
       <h2>Monthly attendance summary — ${attDate.slice(0,7)}</h2>
@@ -582,6 +610,7 @@ function viewGrades(){
           <div class="row">
             <div><label>Date of birth</label><input type="date" data-editstu="dob" value="${esc(stu.dob||"")}"></div>
             <div><label>Blood group</label><input data-editstu="bloodGroup" value="${esc(stu.bloodGroup||"")}"></div>
+            <div><label>Gender</label><select data-editstu="gender"><option value="">-</option><option value="Male" ${stu.gender==="Male"?"selected":""}>Male</option><option value="Female" ${stu.gender==="Female"?"selected":""}>Female</option></select></div>
           </div>
           <div class="row">
             <div><label>Guardian contact</label><input data-editstu="guardianContact" value="${esc(stu.guardianContact||"")}"></div>
@@ -721,7 +750,7 @@ function classButtonsHtml(){
 }
 
 function viewFine(){
-  const list = classFilter ? students.filter(s=>s.className===classFilter) : students;
+  const list = sortByRoll((classFilter ? students.filter(s=>s.className===classFilter) : students).filter(s=>!s.archived));
   const rows = list.map(s=>{
     const f = s.fine || {amount:0,reason:"",paid:true};
     return `<tr>
@@ -932,7 +961,7 @@ function viewBackup(){
   return `
     <div class="card">
       <h2>Bulk import students (CSV or Excel)</h2>
-      <p class="sub">Upload a .csv or .xlsx file with header row: Name,Class,GuardianContact,RollNo,AdmissionNo,DOB,BloodGroup,EmergencyContact. Class must exactly match one of: ${CLASS_LIST.join(", ")}.</p>
+      <p class="sub">Upload a .csv or .xlsx file with header row: Name,Class,GuardianContact,RollNo,AdmissionNo,DOB,BloodGroup,EmergencyContact,Gender. Class must exactly match one of: ${CLASS_LIST.join(", ")}.</p>
       <button class="btn-sm" id="downloadTemplateBtn">Download CSV template</button>
       <input type="file" id="importFile" accept=".csv,.xlsx,.xls" style="margin-top:10px;">
       <button class="btn-accent2" id="importBtn" style="margin-top:8px;">Import students</button>
@@ -1001,10 +1030,11 @@ async function importStudentsCsv(){
   const rows = await readRowsFromFile(file);
   const header = rows[0].map(h=>h.toLowerCase());
   const idx = (name)=>header.indexOf(name.toLowerCase());
-  const iName=idx("name"), iClass=idx("class"), iGuardian=idx("guardiancontact"), iRoll=idx("rollno"), iAdm=idx("admissionno"), iDob=idx("dob"), iBlood=idx("bloodgroup"), iEmerg=idx("emergencycontact");
+  const iName=idx("name"), iClass=idx("class"), iGuardian=idx("guardiancontact"), iRoll=idx("rollno"), iAdm=idx("admissionno"), iDob=idx("dob"), iBlood=idx("bloodgroup"), iEmerg=idx("emergencycontact"), iGender=idx("gender");
   if(iName<0 || iClass<0){ status.textContent = "CSV must have at least Name and Class columns."; return; }
-  const existingKeys = new Set(students.filter(s=>!s.archived).map(dupeKey));
-  let count=0, skipped=0, duplicates=0;
+  const existingByKey = new Map(students.filter(s=>!s.archived).map(s=>[dupeKey(s), s]));
+  const normGender = (v)=>{ const t=(v||"").toString().trim().toLowerCase(); return t.startsWith("m")?"Male":t.startsWith("f")?"Female":""; };
+  let count=0, skipped=0, duplicates=0, updated=0;
   status.textContent = "Importing…";
   for(let i=1;i<rows.length;i++){
     const r = rows[i];
@@ -1012,8 +1042,14 @@ async function importStudentsCsv(){
     if(!name || !CLASS_LIST.includes(className)){ skipped++; continue; }
     const rollNo = iRoll>=0 ? (r[iRoll]||"") : "";
     const key = name.trim().toLowerCase()+"|"+className+"|"+rollNo.trim();
-    if(existingKeys.has(key)){ duplicates++; continue; }
-    existingKeys.add(key);
+    const gender = iGender>=0 ? normGender(r[iGender]) : "";
+    if(existingByKey.has(key)){
+      const ex = existingByKey.get(key);
+      if(ex.id && gender && ex.gender!==gender){ await db.doc("students/"+ex.id).update({gender}); ex.gender=gender; updated++; }
+      else { duplicates++; }
+      continue;
+    }
+    existingByKey.set(key, {id:null, gender});
     await db.collection("students").add({
       name, className,
       guardianContact: iGuardian>=0 ? (r[iGuardian]||"") : "",
@@ -1022,19 +1058,21 @@ async function importStudentsCsv(){
       dob: iDob>=0 ? (r[iDob]||"") : "",
       bloodGroup: iBlood>=0 ? (r[iBlood]||"") : "",
       emergencyContact: iEmerg>=0 ? (r[iEmerg]||"") : "",
+      gender,
       fine:{amount:0,reason:"",paid:true}, grades:{}, attendance:{}, messages:[]
     });
     count++;
   }
   let msg = `Imported ${count} student(s)`;
+  if(updated) msg += `, filled in gender for ${updated} existing student(s)`;
   if(duplicates) msg += `, skipped ${duplicates} already-existing duplicate(s)`;
   if(skipped) msg += `, skipped ${skipped} row(s) with missing name or an unrecognized class name`;
   status.textContent = msg + ".";
 }
 
 function downloadCsvTemplate(){
-  const header = "Name,Class,GuardianContact,RollNo,AdmissionNo,DOB,BloodGroup,EmergencyContact\n";
-  const sample = `Ahmed Ali,Class 1,0300-0000000,21,GPS-2026-021,2019-05-14,O+,0300-1111111\n`;
+  const header = "Name,Class,GuardianContact,RollNo,AdmissionNo,DOB,BloodGroup,EmergencyContact,Gender\n";
+  const sample = `Ahmed Ali,Class 1,0300-0000000,21,GPS-2026-021,2019-05-14,O+,0300-1111111,Male\n`;
   downloadBlob(header+sample, "text/csv", "gps-khankot-import-template.csv");
 }
 
@@ -1202,6 +1240,7 @@ function wireTab(){
   if(tab==="students"){
     document.getElementById("addStudentBtn").onclick = addStudent;
     document.getElementById("stuClassFilter").onchange = e=>{ classFilter=e.target.value; renderTabs(); };
+    document.querySelectorAll("[data-editgender]").forEach(el=>el.onchange=async()=>{ await db.doc("students/"+el.dataset.editgender).update({gender: el.value}); });
     let stuSearchTimer;
     document.getElementById("stuSearch").oninput = e=>{
       const val = e.target.value;
@@ -1224,6 +1263,7 @@ function wireTab(){
     });
   }
   if(tab==="attendance"){
+    document.querySelectorAll("[data-genderbtn]").forEach(el=>el.onclick=()=>{ genderFilter=el.dataset.genderbtn; renderTabs(); });
     document.getElementById("attDatePick").onchange = e=>{ attDate=e.target.value; renderTabs(); };
     document.getElementById("attClassPick").onchange = e=>{ classFilter=e.target.value; renderTabs(); };
     document.querySelectorAll("[data-att]").forEach(el=>el.onclick=async()=>{

@@ -91,7 +91,7 @@ tr:nth-child(even) td{background:rgba(0,0,0,.015);}
 .stamp .ring{width:54px;height:54px;border-radius:50%;border:2px solid var(--crest);background:radial-gradient(circle at 32% 30%,rgba(201,154,62,.20),transparent 70%);display:flex;align-items:center;justify-content:center;margin:0 auto 10px;font-family:var(--serif);font-weight:600;font-size:18px;color:var(--crest);}
 .stamp h2{font-size:14px;margin-bottom:8px;}
 .chip-white{display:inline-block;padding:4px 11px;border-radius:7px;font-size:12px;font-weight:700;color:#fff;background:linear-gradient(135deg,var(--navy),var(--navy-2));}
-.chip-green{display:inline-block;padding:4px 11px;border-radius:7px;font-size:12px;font-weight:700;color:#fff;background:linear-gradient(135deg,#1E7A66,#33B08C);margin-top:8px;}
+.chip-green{display:inline-block;padding:4px 11px;border-radius:7px;font-size:12px;font-weight:700;color:#fff;background:linear-gradient(135deg,#1E7A66,#33B08C);}
 .chip-red{display:inline-block;padding:4px 11px;border-radius:7px;font-size:12px;font-weight:700;color:#fff;background:linear-gradient(135deg,#B54B3A,#DD6B52);}
 .chip-blue{display:inline-block;padding:4px 11px;border-radius:7px;font-size:12px;font-weight:700;color:#fff;background:linear-gradient(135deg,#1D4FA8,#3E7CDB);}
 .chip-gold{display:inline-block;padding:4px 11px;border-radius:7px;font-size:12px;font-weight:700;color:#2e2408;background:linear-gradient(135deg,var(--gold),var(--gold-2));}
@@ -227,6 +227,7 @@ const CLASS_LIST = ["Nursery","LKG","UKG","Class 1","Class 2","Class 3","Class 4
 const EXAM_TERMS = ["Weekly Test","Mid-Term","Final Term"];
 let selectedTerm = EXAM_TERMS[0];
 let genderFilter = "";
+let fineSubTab = "register", fineStudent = null, fineMonth = new Date().toISOString().slice(0,7), fineYear = new Date().toISOString().slice(0,4);
 function sortByRoll(list){
   return [...list].sort((a,b)=>{
     const ra = parseInt(a.rollNo,10), rb = parseInt(b.rollNo,10);
@@ -349,7 +350,9 @@ function init(){
   renderTabs();
 }
 
-function setTab(t){ tab=t; renderTabs(); }
+window.__msgs = {};
+function setMsg(id, text){ window.__msgs[id] = text; const el = document.getElementById(id); if(el) el.textContent = text; }
+function setTab(t){ tab=t; window.__msgs = {}; renderTabs(); }
 
 function renderTabs(){
   let tabs=[["dashboard","🏠","Dashboard"],["classes","🏫","Classes"],["students","🎓","Students"],["attendance","📋","Attendance"],["grades","📘","Grades"],["fine","⚖","Fine"],["homework","✎","Homework"],["notices","📣","Notices"],["messages","✉","Messages"],["timetable","🗓","Timetable"],["activity","📖","Activity"],["backup","⛁","Backup"]];
@@ -364,6 +367,7 @@ function renderTabs(){
   const views = {dashboard:viewDashboard, classes:viewClasses, students:viewStudents, attendance:viewAttendance, grades:viewGrades, fine:viewFine, homework:viewHomework, notices:viewNotices, messages:viewMessages, timetable:viewTimetable, activity:viewActivity, backup:viewBackup, staff:viewStaff};
   panel.innerHTML = views[tab] ? views[tab]() : "";
   wireTab();
+  Object.entries(window.__msgs||{}).forEach(([id,t])=>{ const el=document.getElementById(id); if(el) el.textContent=t; });
 }
 
 // ---------------- DASHBOARD ----------------
@@ -373,7 +377,7 @@ function viewDashboard(){
   const present = active.filter(s=>(s.attendance||{})[today]==="present").length;
   const pct = active.length ? Math.round((present/active.length)*100) : 0;
   const hwDue = homework.filter(h=>!h.archived && h.dueDate===today).length;
-  const fineOwed = active.filter(s=>s.fine && s.fine.amount>0 && !s.fine.paid).length;
+  const fineOwed = active.filter(s=>fineTotals(s).outstanding>0).length;
   const latestNotice = notices.filter(n=>!n.archived)[0];
   return `
     <div class="dashgrid">
@@ -400,7 +404,7 @@ function viewClasses(){
       <div class="ring">${initial}</div>
       <h2>${c}</h2>
       <div class="chip-white">${list.length} enrolled</div>
-      <div class="chip-green">${present} present today</div>
+      <div class="chip-green" style="margin-top:8px;">${present} present today</div>
       <div><button class="btn-sm" style="margin-top:10px;" data-viewclass="${c}">View roster</button></div>
     </div>`;
   }).join("");
@@ -427,13 +431,14 @@ async function promoteAllStudents(){
 // ---------------- STUDENTS ----------------
 function viewStudents(){
   const base = classFilter ? students.filter(s=>s.className===classFilter) : students;
-  const searched = window.__stuSearch ? base.filter(s=>s.name.toLowerCase().includes(window.__stuSearch.toLowerCase())) : base;
+  const searched = window.__stuSearch ? base.filter(s=>{ const q=window.__stuSearch.toLowerCase(); return (s.name||"").toLowerCase().includes(q) || (s.fatherName||"").toLowerCase().includes(q) || String(s.rollNo||"")===q; }) : base;
   const list = sortByRoll(searched.filter(s=>!s.archived));
   const archived = searched.filter(s=>s.archived);
   const rows = list.map(s=>`
     <tr>
       <td>${esc(s.rollNo||"-")}</td>
       <td>${s.photoUrl?`<img src="${s.photoUrl}" style="width:28px;height:28px;border-radius:50%;object-fit:cover;vertical-align:middle;margin-right:6px;">`:""}<span class="studlink" data-open="${s.id}">${esc(s.name)}</span></td>
+      <td>${esc(s.fatherName||"-")}</td>
       <td>${esc(s.className||"-")}</td>
       <td><select data-editgender="${s.id}" style="padding:4px;font-size:12px;"><option value="">-</option><option value="Male" ${s.gender==="Male"?"selected":""}>Boy</option><option value="Female" ${s.gender==="Female"?"selected":""}>Girl</option></select></td>
       <td>${esc(s.guardianContact||"-")}</td>
@@ -449,6 +454,7 @@ function viewStudents(){
       <h2>Add student</h2>
       <div class="row">
         <div><label>Full name</label><input id="s_name"></div>
+        <div><label>Father name</label><input id="s_father"></div>
         <div><label>Class</label><select id="s_class">${classOptions()}</select></div>
       </div>
       <div class="row">
@@ -466,11 +472,11 @@ function viewStudents(){
     </div>
     <div class="card">
       <div class="row">
-        <div><label>Search by name</label><input id="stuSearch" value="${esc(window.__stuSearch||"")}" placeholder="Type a name..."></div>
+        <div><label>Search by name, father name or roll no.</label><input id="stuSearch" value="${esc(window.__stuSearch||"")}" placeholder="Type to search..."></div>
         <div><label>Filter by class</label><select id="stuClassFilter"><option value="">All classes</option>${classOptions(classFilter)}</select></div>
       </div>
       <h2>Roster (${list.length})</h2>
-      ${list.length ? `<div class="table-wrap"><table><tr><th>Roll</th><th>Name</th><th>Class</th><th>Gender</th><th>Guardian</th><th></th></tr>${rows}</table></div>` : `<div class="empty">No students in this view yet.</div>`}
+      ${list.length ? `<div class="table-wrap"><table><tr><th>Roll</th><th>Name</th><th>Father</th><th>Class</th><th>Gender</th><th>Guardian</th><th></th></tr>${rows}</table></div>` : `<div class="empty">No students in this view yet.</div>`}
     </div>
     ${archived.length ? `<div class="card"><h2>Archived (${archived.length}) — not deleted, just hidden</h2><div class="table-wrap"><table><tr><th>Name</th><th>Class</th><th></th></tr>${archRows}</table></div></div>` : ""}
   `;
@@ -487,7 +493,8 @@ async function addStudent(){
   const bloodGroup=document.getElementById("s_blood").value.trim();
   const emergencyContact=document.getElementById("s_emergency").value.trim();
   const gender=document.getElementById("s_gender").value;
-  await db.collection("students").add({name, className, guardianContact, rollNo, admissionNo, dob, bloodGroup, emergencyContact, gender, fine:{amount:0,reason:"",paid:true}, grades:{}, attendance:{}, messages:[]});
+  const fatherName=document.getElementById("s_father").value.trim();
+  await db.collection("students").add({name, className, guardianContact, rollNo, admissionNo, dob, bloodGroup, emergencyContact, gender, fatherName, fine:{amount:0,reason:"",paid:true}, grades:{}, attendance:{}, messages:[]});
 }
 
 // ---------------- ATTENDANCE ----------------
@@ -601,6 +608,7 @@ function viewGrades(){
         <div style="flex:2;">
           <div class="row">
             <div><label>Full name</label><input data-editstu="name" value="${esc(stu.name)}"></div>
+            <div><label>Father name</label><input data-editstu="fatherName" value="${esc(stu.fatherName||"")}"></div>
             <div><label>Class</label><select data-editstu="className">${classOptions(stu.className)}</select></div>
           </div>
           <div class="row">
@@ -671,7 +679,7 @@ function printReportCard(stu){
     </style></head><body>
     <div class="hd"><h1>GPS Khankot</h1><p>School Management System — Report Card</p></div>
     <div class="info">
-      <div><b>Name:</b> ${esc(stu.name)}<br><b>Class:</b> ${esc(stu.className||"-")}<br><b>Roll No:</b> ${esc(stu.rollNo||"-")}</div>
+      <div><b>Name:</b> ${esc(stu.name)}<br><b>Father:</b> ${esc(stu.fatherName||"-")}<br><b>Class:</b> ${esc(stu.className||"-")}<br><b>Roll No:</b> ${esc(stu.rollNo||"-")}</div>
       <div><b>Admission No:</b> ${esc(stu.admissionNo||"-")}<br><b>Date:</b> ${new Date().toLocaleDateString()}</div>
     </div>
     ${sections || "<p>No grades recorded yet.</p>"}
@@ -699,7 +707,7 @@ function printParentSummary(stu){
     const pct=(isObj&&total)?((obtained/total)*100).toFixed(0)+"%":"-";
     return `<tr><td>${esc(subj)}</td><td>${esc(obtained)}</td><td>${esc(total!=null?total:"-")}</td><td>${pct}</td></tr>`;
   }).join("");
-  const f = stu.fine||{amount:0,paid:true};
+  const fineT = fineTotals(stu);
   const relevantHw = homework.filter(h=>!h.archived && h.className===stu.className).slice(0,3);
   const hwList = relevantHw.map(h=>`<li>${esc(h.subject)}: ${esc(h.description)} (due ${esc(h.dueDate||"-")})</li>`).join("") || "<li>None</li>";
   const latestNotice = notices.filter(n=>!n.archived)[0];
@@ -716,11 +724,11 @@ function printParentSummary(stu){
       @media print{ button{display:none;} }
     </style></head><body>
     <div class="hd"><h1 style="margin:4px 0;">GPS Khankot</h1><p style="margin:0;font-size:12px;">Parent Summary Sheet</p></div>
-    <p><b>Name:</b> ${esc(stu.name)} &nbsp; <b>Class:</b> ${esc(stu.className||"-")} &nbsp; <b>Roll No:</b> ${esc(stu.rollNo||"-")}</p>
+    <p><b>Name:</b> ${esc(stu.name)} &nbsp; <b>Father:</b> ${esc(stu.fatherName||"-")} &nbsp; <b>Class:</b> ${esc(stu.className||"-")} &nbsp; <b>Roll No:</b> ${esc(stu.rollNo||"-")}</p>
     <h3>Attendance this month</h3><p>${present}/${marked} days present (${attPct}%)</p>
     <h3>Latest grades — ${esc(latestTermKey)}</h3>
     <div class="table-wrap"><table><tr><th>Subject</th><th>Obtained</th><th>Total</th><th>%</th></tr>${gradeRows || "<tr><td colspan=4>No grades recorded yet</td></tr>"}</table></div>
-    <h3>Fine status</h3><p>${f.amount>0 ? (f.paid?`Cleared (Rs. ${f.amount} — ${esc(f.reason||"")})`:`Outstanding: Rs. ${f.amount} — ${esc(f.reason||"")}`) : "No fine on record"}</p>
+    <h3>Fine status</h3><p>${fineT.count ? `Total fined: Rs. ${fineT.total}, paid: Rs. ${fineT.paid}, outstanding: Rs. ${fineT.outstanding}` : "No fine on record"}</p>
     <h3>Recent homework (${esc(stu.className||"-")})</h3><ul>${hwList}</ul>
     <h3>Latest school notice</h3><p>${latestNotice ? `<b>${esc(latestNotice.title)}:</b> ${esc(latestNotice.message)}` : "None"}</p>
     <p style="margin-top:20px;font-size:11px;color:#777;">Generated ${new Date().toLocaleString()}</p>
@@ -737,39 +745,161 @@ function shareParentSummaryWhatsApp(stu){
   let present=0, marked=0;
   Object.keys(att).forEach(d=>{ if(d.startsWith(monthKey)){ marked++; if(att[d]==="present") present++; } });
   const attPct = marked ? Math.round((present/marked)*100) : 0;
-  const f = stu.fine||{amount:0,paid:true};
-  const text = `GPS Khankot - Summary for ${stu.name} (${stu.className})\nAttendance this month: ${present}/${marked} (${attPct}%)\nFine: ${f.amount>0 ? (f.paid?"Cleared":"Outstanding Rs."+f.amount) : "None"}`;
+  const fineT = fineTotals(stu);
+  const text = `GPS Khankot - Summary for ${stu.name} (${stu.className})\nAttendance this month: ${present}/${marked} (${attPct}%)\nFine: ${fineT.count ? "Total Rs."+fineT.total+", outstanding Rs."+fineT.outstanding : "None"}`;
   const digits = phoneDigits(stu.guardianContact);
   window.open(digits ? `https://wa.me/${digits}?text=${encodeURIComponent(text)}` : `https://api.whatsapp.com/send?text=${encodeURIComponent(text)}`, "_blank");
 }
 
-// ---------------- FINE (replaces Fees — government institution) ----------------
+// ---------------- FINE (government institution: full fine history per student) ----------------
+function fineEntries(s){
+  if(Array.isArray(s.fines)) return s.fines;
+  const f = s.fine;
+  if(f && Number(f.amount)>0) return [{id:"legacy", amount:Number(f.amount)||0, reason:f.reason||"", date:"", paid:!!f.paid}];
+  return [];
+}
+function fineTotals(s){
+  const e = fineEntries(s);
+  const total = e.reduce((a,x)=>a+(Number(x.amount)||0),0);
+  const outstanding = e.filter(x=>!x.paid).reduce((a,x)=>a+(Number(x.amount)||0),0);
+  return {total, outstanding, paid: total-outstanding, count: e.length};
+}
+async function saveFineEntries(studentId, entries){
+  const outstanding = entries.filter(x=>!x.paid).reduce((a,x)=>a+(Number(x.amount)||0),0);
+  const last = entries[entries.length-1];
+  await db.doc("students/"+studentId).update({fines: entries, fine:{amount: outstanding, reason: last?(last.reason||""):"", paid: outstanding===0}});
+}
+function money(n){ return "Rs. "+Number(n||0).toLocaleString(); }
+function monthLabel(m){
+  const d = new Date((m||"")+"-01");
+  return isNaN(d) ? (m||"") : d.toLocaleString("en",{month:"long",year:"numeric"});
+}
+function fineStudentList(){
+  return sortByRoll((classFilter ? students.filter(s=>s.className===classFilter) : students).filter(s=>!s.archived));
+}
+
 function classButtonsHtml(){
   const chips = [["","All classes"], ...CLASS_LIST.map(c=>[c,c])];
   return `<div class="classbtns">${chips.map(([val,label])=>`<div class="classbtn ${classFilter===val?'active':''}" data-classbtn="${val}">${label}</div>`).join("")}</div>`;
 }
 
 function viewFine(){
-  const list = sortByRoll((classFilter ? students.filter(s=>s.className===classFilter) : students).filter(s=>!s.archived));
+  const nav = `<div class="subtabs">
+    <div class="subtab ${fineSubTab==='register'?'active':''}" data-finesub="register">Fine Register</div>
+    <div class="subtab ${fineSubTab==='monthly'?'active':''}" data-finesub="monthly">Monthly</div>
+    <div class="subtab ${fineSubTab==='yearly'?'active':''}" data-finesub="yearly">Yearly</div>
+  </div>`;
+  const body = fineSubTab==="monthly" ? viewFineMonthly() : fineSubTab==="yearly" ? viewFineYearly() : viewFineRegister();
+  return nav + `<div class="card">${classButtonsHtml()}</div>` + body;
+}
+
+function viewFineRegister(){
+  const list = fineStudentList();
+  const opts = list.map(s=>`<option value="${s.id}" ${fineStudent===s.id?'selected':''}>${esc(s.rollNo||"-")}. ${esc(s.name)}</option>`).join("");
+  let sumT=0,sumP=0,sumO=0;
   const rows = list.map(s=>{
-    const f = s.fine || {amount:0,reason:"",paid:true};
-    return `<tr>
-      <td>${esc(s.name)}</td>
-      <td>${esc(s.className||"-")}</td>
-      <td><input type="number" data-fineamt="${s.id}" value="${f.amount||0}" style="width:70px;"></td>
-      <td><input type="text" data-finereason="${s.id}" value="${esc(f.reason||"")}" placeholder="reason" style="width:110px;"></td>
-      <td>${f.amount>0 ? (f.paid ? `<span class="pill pill-ok">Cleared</span>` : `<span class="pill pill-bad">Outstanding</span>`) : `<span class="pill">—</span>`}</td>
-      <td><button class="btn-sm" data-finepaid="${s.id}|${!f.paid}">${f.paid ? "Mark outstanding" : "Mark cleared"}</button></td>
-    </tr>`;
+    const t = fineTotals(s); sumT+=t.total; sumP+=t.paid; sumO+=t.outstanding;
+    return `<tr><td>${esc(s.rollNo||"-")}</td><td><span class="studlink" data-finestu="${s.id}">${esc(s.name)}</span></td><td>${esc(s.className||"-")}</td><td>${t.total?money(t.total):"-"}</td><td>${t.paid?money(t.paid):"-"}</td><td>${t.outstanding>0?`<span class="chip-red">${money(t.outstanding)}</span>`:`<span class="pill pill-ok">Clear</span>`}</td></tr>`;
   }).join("");
+  const stu = students.find(s=>s.id===fineStudent);
+  let history = "";
+  if(stu){
+    const entries = fineEntries(stu).slice().sort((a,b)=>(b.date||"").localeCompare(a.date||""));
+    const t = fineTotals(stu);
+    const erows = entries.map(x=>`<tr>
+      <td><input type="date" data-fineedit="${x.id}|date" value="${esc(x.date||"")}" style="width:140px;"></td>
+      <td><input data-fineedit="${x.id}|reason" value="${esc(x.reason||"")}" style="width:150px;"></td>
+      <td><input type="number" data-fineedit="${x.id}|amount" value="${x.amount||0}" style="width:80px;"></td>
+      <td><button class="btn-sm ${x.paid?'chip-green':'chip-red'}" style="margin-top:0;" data-finetoggle="${x.id}">${x.paid?"Paid":"Unpaid"}</button></td>
+      <td><button class="btn-danger" data-fineremove="${x.id}">Remove</button></td>
+    </tr>`).join("");
+    history = `<div class="card">
+      <h2>Complete fine record — ${esc(stu.name)}</h2>
+      <p class="sub">Roll ${esc(stu.rollNo||"-")}, ${esc(stu.className||"-")}. Total fined <b>${money(t.total)}</b>, paid <b>${money(t.paid)}</b>, outstanding <b>${money(t.outstanding)}</b> (${t.count} fine${t.count===1?"":"s"}). Edits save automatically.</p>
+      ${erows ? `<div class="table-wrap"><table><tr><th>Date</th><th>Reason</th><th>Amount</th><th>Status</th><th></th></tr>${erows}</table></div>` : `<div class="empty">No fines on record for this student.</div>`}
+    </div>`;
+  }
   return `
-    <div class="card">${classButtonsHtml()}</div>
     <div class="card">
-      <h2>Fine register ${classFilter?`— ${esc(classFilter)}`:""}</h2>
-      <p class="sub">For discipline or damages, not tuition (government school — no fees charged).</p>
-      ${list.length ? `<div class="table-wrap"><table><tr><th>Name</th><th>Class</th><th>Amount</th><th>Reason</th><th>Status</th><th></th></tr>${rows}</table></div>` : `<div class="empty">No students in this view yet.</div>`}
+      <h2>Add a fine</h2>
+      <div class="row">
+        <div><label>Student</label><select id="fineStudentPick"><option value="">-- choose --</option>${opts}</select></div>
+        <div><label>Amount (Rs.)</label><input id="fineAmount" type="number" min="0"></div>
+      </div>
+      <div class="row">
+        <div><label>Reason</label><input id="fineReason" placeholder="e.g. Late to class"></div>
+        <div><label>Date</label><input id="fineDate" type="date" value="${todayStr()}"></div>
+      </div>
+      <button class="btn-primary" id="addFineBtn">Add fine</button>
+    </div>
+    ${history}
+    <div class="card">
+      <h2>All students — total fine ${classFilter?`(${esc(classFilter)})`:""}</h2>
+      <p class="sub">For discipline or damages, not tuition (government school, no fees charged). Tap a name to see and edit that student's complete fine record.</p>
+      ${list.length ? `<div class="table-wrap"><table><tr><th>Roll</th><th>Name</th><th>Class</th><th>Total fined</th><th>Paid</th><th>Outstanding</th></tr>${rows}<tr><td></td><td><b>Total</b></td><td></td><td><b>${money(sumT)}</b></td><td><b>${money(sumP)}</b></td><td><b>${money(sumO)}</b></td></tr></table></div>` : `<div class="empty">No students in this view yet.</div>`}
+      <button class="btn-sm" id="downloadFinesBtn" style="margin-top:10px;">Download all fines (.csv)</button>
     </div>
   `;
+}
+
+function viewFineMonthly(){
+  const list = fineStudentList();
+  const m = fineMonth;
+  let sumM=0,sumOut=0,sumAll=0;
+  const rows = list.map(s=>{
+    const es = fineEntries(s).filter(x=>(x.date||"").slice(0,7)===m);
+    const amt = es.reduce((a,x)=>a+(Number(x.amount)||0),0);
+    const out = es.filter(x=>!x.paid).reduce((a,x)=>a+(Number(x.amount)||0),0);
+    const t = fineTotals(s);
+    sumM+=amt; sumOut+=out; sumAll+=t.total;
+    return `<tr><td>${esc(s.rollNo||"-")}</td><td><span class="studlink" data-finestu="${s.id}">${esc(s.name)}</span></td><td>${esc(s.className||"-")}</td><td>${es.length||"-"}</td><td>${amt?money(amt):"-"}</td><td>${out?`<span class="chip-red">${money(out)}</span>`:"-"}</td><td><b>${t.total?money(t.total):"-"}</b></td></tr>`;
+  }).join("");
+  return `
+    <div class="card"><label>Month</label><input type="month" id="fineMonthPick" value="${esc(m)}" style="max-width:200px;"></div>
+    <div class="card">
+      <h2>Fines in ${esc(monthLabel(m))} ${classFilter?`(${esc(classFilter)})`:""}</h2>
+      ${list.length ? `<div class="table-wrap"><table><tr><th>Roll</th><th>Name</th><th>Class</th><th>Fines</th><th>This month</th><th>Unpaid this month</th><th>All-time total</th></tr>${rows}<tr><td></td><td><b>Total</b></td><td></td><td></td><td><b>${money(sumM)}</b></td><td><b>${money(sumOut)}</b></td><td><b>${money(sumAll)}</b></td></tr></table></div>` : `<div class="empty">No students in this view yet.</div>`}
+      <p class="sub">All-time total is each student's complete fine record. Fines saved without a date count only in the all-time total; open the student's record to add the date.</p>
+    </div>
+  `;
+}
+
+function viewFineYearly(){
+  const list = fineStudentList();
+  const y = String(fineYear);
+  const mons = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+  const colTotals = Array(12).fill(0);
+  let sumY=0,sumAll=0;
+  const rows = list.map(s=>{
+    const per = Array(12).fill(0);
+    fineEntries(s).forEach(x=>{
+      const d = x.date||"";
+      if(d.slice(0,4)===y){ const mi = parseInt(d.slice(5,7),10)-1; if(mi>=0 && mi<12) per[mi]+=Number(x.amount)||0; }
+    });
+    const yt = per.reduce((a,b)=>a+b,0);
+    const t = fineTotals(s);
+    per.forEach((v,i)=>colTotals[i]+=v); sumY+=yt; sumAll+=t.total;
+    return `<tr><td>${esc(s.rollNo||"-")}</td><td><span class="studlink" data-finestu="${s.id}">${esc(s.name)}</span></td>${per.map(v=>`<td>${v||"-"}</td>`).join("")}<td><b>${yt?money(yt):"-"}</b></td><td><b>${t.total?money(t.total):"-"}</b></td></tr>`;
+  }).join("");
+  return `
+    <div class="card"><label>Year</label><input type="number" id="fineYearPick" value="${esc(y)}" min="2000" max="2100" style="max-width:140px;"></div>
+    <div class="card">
+      <h2>Fines in ${esc(y)} ${classFilter?`(${esc(classFilter)})`:""}</h2>
+      ${list.length ? `<div class="table-wrap"><table><tr><th>Roll</th><th>Name</th>${mons.map(m=>`<th>${m}</th>`).join("")}<th>Year total</th><th>All-time total</th></tr>${rows}<tr><td></td><td><b>Total</b></td>${colTotals.map(v=>`<td><b>${v||"-"}</b></td>`).join("")}<td><b>${money(sumY)}</b></td><td><b>${money(sumAll)}</b></td></tr></table></div>` : `<div class="empty">No students in this view yet.</div>`}
+      <p class="sub">Monthly amounts are in Rs. Year total covers ${esc(y)} only; all-time total is the student's complete fine record, including undated fines.</p>
+    </div>
+  `;
+}
+
+function downloadFinesCsv(){
+  const header = "Roll No,Name,Father Name,Class,Date,Reason,Amount,Status\n";
+  const rows = [];
+  sortByRoll(students.filter(s=>!s.archived)).forEach(s=>{
+    fineEntries(s).forEach(x=>{
+      rows.push([s.rollNo||"", s.name, s.fatherName||"", s.className||"", x.date||"", x.reason||"", x.amount||0, x.paid?"Paid":"Unpaid"].map(v=>`"${(v+"").replace(/"/g,'""')}"`).join(","));
+    });
+  });
+  downloadBlob(header+rows.join("\n"), "text/csv", "gps-khankot-fines-"+todayStr()+".csv");
 }
 
 // ---------------- HOMEWORK ----------------
@@ -961,8 +1091,9 @@ function viewBackup(){
   return `
     <div class="card">
       <h2>Bulk import students (CSV or Excel)</h2>
-      <p class="sub">Upload a .csv or .xlsx file with header row: Name,Class,GuardianContact,RollNo,AdmissionNo,DOB,BloodGroup,EmergencyContact,Gender. Class must exactly match one of: ${CLASS_LIST.join(", ")}.</p>
+      <p class="sub">Upload a .csv or .xlsx file with a header row: Name, FatherName, Class, GuardianContact, RollNo, AdmissionNo, DOB, BloodGroup, EmergencyContact, Gender (only Name and Class are required). Importing a file again never duplicates students; it updates Gender and Father name on the ones already added. Class must exactly match one of: ${CLASS_LIST.join(", ")}.</p>
       <button class="btn-sm" id="downloadTemplateBtn">Download CSV template</button>
+      <button class="btn-sm" id="downloadXlsxBtn">Download Excel template</button>
       <input type="file" id="importFile" accept=".csv,.xlsx,.xls" style="margin-top:10px;">
       <button class="btn-accent2" id="importBtn" style="margin-top:8px;">Import students</button>
       <div id="importStatus" class="sub"></div>
@@ -1026,16 +1157,16 @@ async function importStudentsCsv(){
   const fileInput = document.getElementById("importFile");
   const status = document.getElementById("importStatus");
   const file = fileInput.files[0];
-  if(!file){ status.textContent = "Choose a CSV or Excel file first."; return; }
+  if(!file){ setMsg("importStatus", "Choose a CSV or Excel file first."); return; }
   const rows = await readRowsFromFile(file);
   const header = rows[0].map(h=>h.toLowerCase());
   const idx = (name)=>header.indexOf(name.toLowerCase());
-  const iName=idx("name"), iClass=idx("class"), iGuardian=idx("guardiancontact"), iRoll=idx("rollno"), iAdm=idx("admissionno"), iDob=idx("dob"), iBlood=idx("bloodgroup"), iEmerg=idx("emergencycontact"), iGender=idx("gender");
-  if(iName<0 || iClass<0){ status.textContent = "CSV must have at least Name and Class columns."; return; }
+  const iName=idx("name"), iClass=idx("class"), iGuardian=idx("guardiancontact"), iRoll=idx("rollno"), iAdm=idx("admissionno"), iDob=idx("dob"), iBlood=idx("bloodgroup"), iEmerg=idx("emergencycontact"), iGender=idx("gender"), iFather=Math.max(idx("fathername"), idx("father name"), idx("father"));
+  if(iName<0 || iClass<0){ setMsg("importStatus", "CSV must have at least Name and Class columns."); return; }
   const existingByKey = new Map(students.filter(s=>!s.archived).map(s=>[dupeKey(s), s]));
   const normGender = (v)=>{ const t=(v||"").toString().trim().toLowerCase(); return t.startsWith("m")?"Male":t.startsWith("f")?"Female":""; };
   let count=0, skipped=0, duplicates=0, updated=0;
-  status.textContent = "Importing…";
+  setMsg("importStatus", "Importing…");
   for(let i=1;i<rows.length;i++){
     const r = rows[i];
     const name = r[iName]; const className = r[iClass];
@@ -1043,13 +1174,17 @@ async function importStudentsCsv(){
     const rollNo = iRoll>=0 ? (r[iRoll]||"") : "";
     const key = name.trim().toLowerCase()+"|"+className+"|"+rollNo.trim();
     const gender = iGender>=0 ? normGender(r[iGender]) : "";
+    const fatherName = iFather>=0 ? (r[iFather]||"").trim() : "";
     if(existingByKey.has(key)){
       const ex = existingByKey.get(key);
-      if(ex.id && gender && ex.gender!==gender){ await db.doc("students/"+ex.id).update({gender}); ex.gender=gender; updated++; }
+      const patch = {};
+      if(gender && ex.gender!==gender) patch.gender = gender;
+      if(fatherName && ex.fatherName!==fatherName) patch.fatherName = fatherName;
+      if(ex.id && Object.keys(patch).length){ await db.doc("students/"+ex.id).update(patch); Object.assign(ex, patch); updated++; }
       else { duplicates++; }
       continue;
     }
-    existingByKey.set(key, {id:null, gender});
+    existingByKey.set(key, {id:null, gender, fatherName});
     await db.collection("students").add({
       name, className,
       guardianContact: iGuardian>=0 ? (r[iGuardian]||"") : "",
@@ -1059,21 +1194,48 @@ async function importStudentsCsv(){
       bloodGroup: iBlood>=0 ? (r[iBlood]||"") : "",
       emergencyContact: iEmerg>=0 ? (r[iEmerg]||"") : "",
       gender,
+      fatherName,
       fine:{amount:0,reason:"",paid:true}, grades:{}, attendance:{}, messages:[]
     });
     count++;
   }
   let msg = `Imported ${count} student(s)`;
-  if(updated) msg += `, filled in gender for ${updated} existing student(s)`;
+  if(updated) msg += `, updated gender / father name for ${updated} existing student(s)`;
   if(duplicates) msg += `, skipped ${duplicates} already-existing duplicate(s)`;
   if(skipped) msg += `, skipped ${skipped} row(s) with missing name or an unrecognized class name`;
-  status.textContent = msg + ".";
+  setMsg("importStatus", msg + ".");
 }
 
 function downloadCsvTemplate(){
-  const header = "Name,Class,GuardianContact,RollNo,AdmissionNo,DOB,BloodGroup,EmergencyContact,Gender\n";
-  const sample = `Ahmed Ali,Class 1,0300-0000000,21,GPS-2026-021,2019-05-14,O+,0300-1111111,Male\n`;
+  const header = "Name,FatherName,Class,GuardianContact,RollNo,AdmissionNo,DOB,BloodGroup,EmergencyContact,Gender\n";
+  const sample = `Ahmed Ali,Muhammad Ali,Class 1,0300-0000000,21,GPS-2026-021,2019-05-14,O+,0300-1111111,Male\n`;
   downloadBlob(header+sample, "text/csv", "gps-khankot-import-template.csv");
+}
+
+function downloadExcelTemplate(){
+  if(typeof XLSX==="undefined"){ alert("The Excel library did not load. Check your internet connection and try again."); return; }
+  const header = ["Name","FatherName","Class","GuardianContact","RollNo","AdmissionNo","DOB","BloodGroup","EmergencyContact","Gender"];
+  const rows = [
+    header,
+    ["Ahmed Ali","Muhammad Ali","Class 1","0300-0000000","21","GPS-2026-021","2019-05-14","O+","0300-1111111","Male"],
+    ["Ayesha Noor","Noor Muhammad","Class 1","0301-0000000","22","GPS-2026-022","2019-08-02","A+","","Female"]
+  ];
+  const ws = XLSX.utils.aoa_to_sheet(rows);
+  ws["!cols"] = header.map(h=>({wch: Math.max(14, h.length+4)}));
+  const notes = XLSX.utils.aoa_to_sheet([
+    ["Instructions"],
+    ["Name and Class are required. Every other column is optional."],
+    ["Class must be exactly one of: " + CLASS_LIST.join(", ")],
+    ["Gender: Male or Female (M or F also works)."],
+    ["DOB format: YYYY-MM-DD, for example 2019-05-14."],
+    ["Delete the two sample rows before importing your real students."],
+    ["Importing the same file again never creates duplicates; it only updates Gender and Father name."]
+  ]);
+  notes["!cols"] = [{wch:90}];
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, "Students");
+  XLSX.utils.book_append_sheet(wb, notes, "Instructions");
+  XLSX.writeFile(wb, "gps-khankot-import-template.xlsx");
 }
 
 function dupeKey(s){
@@ -1089,18 +1251,18 @@ async function findAndRemoveDuplicates(){
   });
   const dupeGroups = Object.values(groups).filter(g=>g.length>1);
   const toRemove = dupeGroups.flatMap(g=>g.slice(1));
-  if(!toRemove.length){ status.textContent = "No duplicates found."; return; }
+  if(!toRemove.length){ setMsg("dedupeStatus", "No duplicates found."); return; }
   if(!confirm(`Found ${toRemove.length} duplicate record(s) across ${dupeGroups.length} student(s). Remove the extra copies? This keeps one copy of each and permanently deletes the rest.`)) return;
-  status.textContent = "Removing…";
+  setMsg("dedupeStatus", "Removing…");
   for(const s of toRemove){ await firestore.collection("students").doc(s.id).delete(); }
   logActivity("delete", "duplicates", `Removed ${toRemove.length} duplicate students`);
-  status.textContent = `Removed ${toRemove.length} duplicate record(s).`;
+  setMsg("dedupeStatus", `Removed ${toRemove.length} duplicate record(s).`);
 }
 
 async function removeDemoData(){
   const btn = document.getElementById("removeDemoBtn");
   if(!confirm("Permanently delete the demo students, demo homework, and demo notices? Your real students and real data are matched precisely and will NOT be touched.")) return;
-  btn.textContent = "Removing…";
+  setMsg("removeDemoBtn", "Removing…");
   const demoPairs = [
     ["Ayesha Khan","0300-1234567"],["Bilal Ahmed","0301-2345678"],["Sara Malik","0302-3456789"],
     ["Hamza Iqbal","0303-4567890"],["Zainab Tariq","0304-5678901"],["Ali Raza","0305-6789012"],
@@ -1131,12 +1293,12 @@ async function removeDemoData(){
   Object.keys(demoCells).forEach(k=>{ if(grid[k]===demoCells[k]){ delete grid[k]; gridChanged=true; } });
   if(gridChanged) await firestore.doc("timetable/main").set({grid});
   logActivity("delete", "demo-data", `Removed ${removed} demo students`);
-  btn.textContent = `Removed ${removed} demo student(s) and related demo entries.`;
+  setMsg("removeDemoBtn", `Removed ${removed} demo student(s) and related demo entries.`);
 }
 
 async function seedDemoData(){
   const btn = document.getElementById("seedDemoBtn");
-  btn.textContent = "Loading demo data…";
+  setMsg("seedDemoBtn", "Loading demo data…");
   const today = todayStr();
   const demoStudents = [
     {name:"Ayesha Khan", className:"Nursery", guardianContact:"0300-1234567", fine:{amount:0,reason:"",paid:true}, grades:{}, attendance:{[today]:"present"}, messages:[]},
@@ -1162,7 +1324,7 @@ async function seedDemoData(){
   for(const n of demoNotices){ await db.collection("notices").add(n); }
   const demoGrid = {"Class 1_Mon_1":"Math","Class 1_Mon_2":"English","Class 1_Tue_1":"Science"};
   await db.doc("timetable/main").set({grid: {...(ttDoc.grid||{}), ...demoGrid}});
-  btn.textContent = "Demo data loaded — check each tab!";
+  setMsg("seedDemoBtn", "Demo data loaded — check each tab!");
 }
 
 async function downloadFullBackup(){
@@ -1186,11 +1348,11 @@ async function downloadFullBackup(){
 
 function downloadRosterCsv(){
   const today = todayStr();
-  const header = "Name,Class,Guardian Contact,Fine Amount,Fine Status,Today Attendance\n";
-  const rows = students.filter(s=>!s.archived).map(s=>{
-    const f = s.fine || {amount:0,paid:true};
+  const header = "Roll No,Name,Father Name,Class,Gender,Guardian Contact,Total Fined,Fine Outstanding,Today Attendance\n";
+  const rows = sortByRoll(students.filter(s=>!s.archived)).map(s=>{
+    const t = fineTotals(s);
     const att = (s.attendance||{})[today] || "unmarked";
-    return [s.name, s.className, s.guardianContact||"", f.amount||0, f.paid?"Cleared":"Outstanding", att].map(v=>`"${(v+"").replace(/"/g,'""')}"`).join(",");
+    return [s.rollNo||"", s.name, s.fatherName||"", s.className||"", s.gender||"", s.guardianContact||"", t.total, t.outstanding, att].map(v=>`"${(v+"").replace(/"/g,'""')}"`).join(",");
   }).join("\n");
   downloadBlob(header+rows, "text/csv", "gps-khankot-roster-" + today + ".csv");
 }
@@ -1209,7 +1371,7 @@ async function restoreFromBackup(){
   const file = fileInput.files[0];
   if(!file) return alert("Choose a backup .json file first.");
   const btn = document.getElementById("restoreBtn");
-  btn.textContent = "Restoring…";
+  setMsg("restoreBtn", "Restoring…");
   try{
     const text = await file.text();
     const data = JSON.parse(text);
@@ -1223,10 +1385,10 @@ async function restoreFromBackup(){
     if(data.notices) for(const n of data.notices){ const {id, ...rest} = n; await firestore.collection("notices").add(rest); }
     if(data.timetable) await firestore.doc("timetable/main").set(data.timetable);
     logActivity("restore", "backup", file.name);
-    btn.textContent = "Restore complete!";
+    setMsg("restoreBtn", "Restore complete!");
   }catch(e){
     alert("Restore failed: " + e.message);
-    btn.textContent = "Restore from file";
+    setMsg("restoreBtn", "Restore from file");
   }
 }
 
@@ -1329,22 +1491,42 @@ function wireTab(){
   }
   if(tab==="fine"){
     document.querySelectorAll("[data-classbtn]").forEach(el=>el.onclick=()=>{ classFilter=el.dataset.classbtn; renderTabs(); });
-    document.querySelectorAll("[data-fineamt]").forEach(el=>el.onchange=async()=>{
-      const stu=students.find(s=>s.id===el.dataset.fineamt);
-      const fine={...(stu.fine||{}), amount:parseFloat(el.value)||0};
-      await db.doc("students/"+el.dataset.fineamt).update({fine});
-    });
-    document.querySelectorAll("[data-finereason]").forEach(el=>el.onchange=async()=>{
-      const stu=students.find(s=>s.id===el.dataset.finereason);
-      const fine={...(stu.fine||{}), reason:el.value.trim()};
-      await db.doc("students/"+el.dataset.finereason).update({fine});
-    });
-    document.querySelectorAll("[data-finepaid]").forEach(el=>el.onclick=async()=>{
-      const [id,paidStr]=el.dataset.finepaid.split("|");
+    document.querySelectorAll("[data-finesub]").forEach(el=>el.onclick=()=>{ fineSubTab=el.dataset.finesub; renderTabs(); });
+    document.querySelectorAll("[data-finestu]").forEach(el=>el.onclick=()=>{ fineStudent=el.dataset.finestu; fineSubTab="register"; renderTabs(); });
+    const mp=document.getElementById("fineMonthPick"); if(mp) mp.onchange=e=>{ if(e.target.value){ fineMonth=e.target.value; renderTabs(); } };
+    const yp=document.getElementById("fineYearPick"); if(yp) yp.onchange=e=>{ if(e.target.value){ fineYear=e.target.value; renderTabs(); } };
+    const pick=document.getElementById("fineStudentPick"); if(pick) pick.onchange=e=>{ fineStudent=e.target.value||null; };
+    const addBtn=document.getElementById("addFineBtn");
+    if(addBtn) addBtn.onclick=async()=>{
+      const id=document.getElementById("fineStudentPick").value;
+      const amount=Number(document.getElementById("fineAmount").value);
+      const reason=document.getElementById("fineReason").value.trim();
+      const date=document.getElementById("fineDate").value || todayStr();
+      if(!id){ alert("Choose a student first."); return; }
+      if(!(amount>0)){ alert("Enter a fine amount greater than 0."); return; }
       const stu=students.find(s=>s.id===id);
-      const fine={...(stu.fine||{}), paid: paidStr==="true"};
-      await db.doc("students/"+id).update({fine});
+      const entries=[...fineEntries(stu).map(x=>({...x})), {id:"f"+Date.now().toString(36)+Math.random().toString(36).slice(2,5), amount, reason, date, paid:false}];
+      fineStudent=id;
+      await saveFineEntries(id, entries);
+    };
+    document.querySelectorAll("[data-fineedit]").forEach(el=>el.onchange=async()=>{
+      const [id, field]=el.dataset.fineedit.split("|");
+      const stu=students.find(s=>s.id===fineStudent); if(!stu) return;
+      const entries=fineEntries(stu).map(x=>x.id===id ? {...x, [field]: field==="amount" ? (Number(el.value)||0) : el.value.trim()} : {...x});
+      await saveFineEntries(fineStudent, entries);
     });
+    document.querySelectorAll("[data-finetoggle]").forEach(el=>el.onclick=async()=>{
+      const stu=students.find(s=>s.id===fineStudent); if(!stu) return;
+      const entries=fineEntries(stu).map(x=>x.id===el.dataset.finetoggle ? {...x, paid:!x.paid} : {...x});
+      await saveFineEntries(fineStudent, entries);
+    });
+    document.querySelectorAll("[data-fineremove]").forEach(el=>el.onclick=async()=>{
+      if(!confirm("Remove this fine entry? It is permanently deleted from this student's record.")) return;
+      const stu=students.find(s=>s.id===fineStudent); if(!stu) return;
+      const entries=fineEntries(stu).filter(x=>x.id!==el.dataset.fineremove).map(x=>({...x}));
+      await saveFineEntries(fineStudent, entries);
+    });
+    const dfb=document.getElementById("downloadFinesBtn"); if(dfb) dfb.onclick=downloadFinesCsv;
   }
   if(tab==="homework"){
     document.getElementById("hwClassPick").onchange = e=>{ classFilter=e.target.value; renderTabs(); };
@@ -1450,6 +1632,7 @@ function wireTab(){
   }
   if(tab==="backup"){
     document.getElementById("downloadTemplateBtn").onclick = downloadCsvTemplate;
+    document.getElementById("downloadXlsxBtn").onclick = downloadExcelTemplate;
     document.getElementById("importBtn").onclick = importStudentsCsv;
     document.getElementById("seedDemoBtn").onclick = seedDemoData;
     document.getElementById("removeDemoBtn").onclick = removeDemoData;

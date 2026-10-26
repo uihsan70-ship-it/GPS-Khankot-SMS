@@ -1,4 +1,4 @@
-const CACHE = "gps-khankot-lms-v20";
+const CACHE = "gps-khankot-lms-v21";
 const SHELL = ["./", "./index.html", "./manifest.json", "./icon-192.png", "./icon-512.png"];
 
 self.addEventListener("install", (e) => {

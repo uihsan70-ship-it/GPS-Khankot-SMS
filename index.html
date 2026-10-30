@@ -1,0 +1,1979 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>GPS Khankot — SMS</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#14264B">
+<link rel="apple-touch-icon" href="icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Naskh+Arabic:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<style>
+:root{
+  --navy:#14264B; --deep:#0B1733; --royal:#315CE8; --electric:#4F7CFF; --teal:#0F9F95; --emerald:#15966A; --amber:#F2B544; --violet:#7957D5; --coral:#E76868;
+  --bg:#F4F7FC; --card:#FFFFFF; --line:#E2E8F0; --text:#17243D; --sub:#64748B; --field:#CBD5E1; --thead:#EEF3FB;
+  --gold:#F2B544; --gold-2:#D99A22; --gold-soft:#FBE3A8; --navy-2:#315CE8; --crest:#14264B; --masthead-tag:#FBE3A8;
+  --emerald-ink:#0E7050; --brick:#C23B3B; --radius:14px; --shadow:0 1px 2px rgba(20,38,75,.06),0 4px 14px rgba(20,38,75,.05);
+  --sans:"Inter","Noto Naskh Arabic",-apple-system,"Segoe UI",Roboto,sans-serif; --serif:var(--sans);
+  box-sizing:border-box; padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){ --bg:#0B1220; --card:#121B2E; --line:#25324B; --text:#EAF0FA; --sub:#9AA8C2; --field:#3A4A68; --thead:#18233A; --crest:#A9C0FF; --emerald-ink:#4FD1A5; --brick:#FF8F8F; }
+}
+*{box-sizing:border-box;}
+html,body{min-height:100%;}
+body{margin:0;background:var(--bg);color:var(--text);font:14.5px/1.5 var(--sans);-webkit-font-smoothing:antialiased;}
+html[lang="ur"] body{font-family:"Noto Naskh Arabic","Inter",sans-serif;line-height:1.85;}
+:focus-visible{outline:3px solid var(--electric);outline-offset:2px;}
+.wrap{max-width:none;margin:0;padding:0 0 40px;}
+
+.masthead{position:sticky;top:0;z-index:30;display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding:12px 20px;color:#fff;overflow:hidden;background:linear-gradient(120deg,var(--deep) 0%,var(--navy) 55%,#24408F 100%);border-bottom:3px solid var(--amber);}
+.masthead::before{content:"";position:absolute;top:-80%;inset-inline-end:-6%;width:340px;height:260%;background:radial-gradient(circle,rgba(242,181,68,.22),transparent 65%);pointer-events:none;}
+.crestrow{display:flex;align-items:center;gap:12px;position:relative;}
+.crest svg{display:block;}
+.school-name{font-weight:700;font-size:19px;letter-spacing:.2px;line-height:1.15;}
+.school-tag{color:var(--masthead-tag);font-size:12px;margin-top:2px;}
+.namebar{position:relative;margin-inline-start:auto;display:flex;align-items:center;gap:12px;flex-wrap:wrap;font-size:12.5px;color:rgba(255,255,255,.82);}
+.namebar b{color:#fff;}
+.role-badge{display:inline-block;padding:2px 9px;border-radius:999px;font-size:10.5px;font-weight:700;background:var(--amber);color:#2E2100;margin-inline-start:6px;text-transform:capitalize;}
+.actions{display:flex;gap:8px;}
+.signout{background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.35);color:#fff;border-radius:10px;padding:7px 14px;font-size:12.5px;min-height:36px;}
+.signout:hover{background:rgba(255,255,255,.22);}
+.menubtn{display:none;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.3);color:#fff;width:40px;height:40px;padding:0;align-items:center;justify-content:center;position:relative;}
+.menubtn svg,.tab svg,.kpi .ico svg{fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round;}
+.menubtn svg{width:22px;height:22px;}
+.scrim{display:none;}
+.offline-banner{background:var(--gold-soft);color:#54430e;font-size:12.5px;text-align:center;padding:8px;display:none;}
+.offline-banner.show{display:block;}
+
+.content{max-width:1320px;margin:0 auto;padding:20px;}
+#root.authed{display:grid;grid-template-columns:248px minmax(0,1fr);gap:24px;align-items:start;}
+.tabs{position:sticky;top:88px;display:flex;flex-direction:column;gap:2px;background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:10px;box-shadow:var(--shadow);max-height:calc(100vh - 108px);overflow-y:auto;}
+.navgroup{font-size:11.5px;font-weight:600;color:var(--sub);padding:12px 10px 4px;}
+.tab{display:flex;align-items:center;gap:11px;width:100%;text-align:start;padding:9px 11px;min-height:40px;background:transparent;color:var(--text);border-radius:10px;font-size:13.5px;font-weight:500;}
+.tab svg{width:18px;height:18px;flex:none;color:var(--sub);}
+.tab:hover{background:rgba(49,92,232,.08);}
+.tab.active{background:linear-gradient(135deg,var(--royal),var(--violet));color:#fff;font-weight:600;box-shadow:0 4px 12px rgba(49,92,232,.28);}
+.tab.active svg{color:#fff;}
+.main{min-width:0;}
+.pagehead{margin-bottom:16px;}
+.pagehead h1,.welcome h1{font-size:28px;font-weight:700;letter-spacing:-.01em;margin:0;}
+
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:18px;margin-bottom:14px;box-shadow:var(--shadow);}
+h2{font-size:17px;font-weight:700;margin:0 0 12px;}
+h3{font-size:15px;font-weight:600;}
+.sub{color:var(--sub);font-size:12.5px;margin:2px 0 12px;}
+label{display:block;font-size:13px;font-weight:500;margin:10px 0 5px;}
+input,select,textarea{width:100%;padding:9px 11px;min-height:40px;border-radius:10px;border:1px solid var(--field);background:var(--card);color:var(--text);font:inherit;font-size:14px;}
+input:focus-visible,select:focus-visible,textarea:focus-visible{outline:3px solid rgba(79,124,255,.45);outline-offset:0;border-color:var(--royal);}
+textarea{resize:vertical;min-height:56px;}
+fieldset{border:0;margin:0;padding:0;min-width:0;}
+legend{font-size:14px;font-weight:600;padding:0;margin:14px 0 2px;color:var(--crest);}
+.req{color:var(--brick);}
+.field-err{color:var(--brick);font-size:12.5px;margin-top:8px;min-height:1px;}
+.row{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:2px 14px;}
+
+button{cursor:pointer;border:0;border-radius:10px;font:600 13.5px var(--sans);padding:10px 16px;min-height:40px;transition:transform .15s,box-shadow .15s,background .15s;}
+button:active{transform:scale(.98);}
+button:disabled{opacity:.6;cursor:not-allowed;}
+.btn-primary{background:linear-gradient(135deg,var(--royal),#2447C4);color:#fff;margin-top:12px;}
+.btn-primary:hover{box-shadow:0 6px 16px rgba(49,92,232,.3);}
+.btn-accent2{background:linear-gradient(135deg,var(--amber),#E5A02B);color:#2E2100;margin-top:12px;}
+.btn-whatsapp{background:#128C4A;color:#fff;margin-top:8px;}
+.chip-white,.chip-green,.chip-red,.chip-blue,.chip-gold,.chip-yellow,.chip-boy,.chip-girl{display:inline-block;padding:4px 12px;border-radius:999px;font-size:12px;font-weight:700;color:#fff;}
+.chip-white{background:linear-gradient(135deg,var(--navy),#24408F);}
+.chip-green{background:linear-gradient(135deg,#0E7A57,#15966A);}
+.chip-red{background:#C23B3B;}
+.chip-blue,.chip-boy{background:#2748C9;}
+.chip-girl{background:#C2397F;}
+.chip-gold,.chip-yellow{background:var(--amber);color:#2E2100;}
+.btn-sm{background:var(--card);border:1px solid var(--field);color:var(--text);padding:6px 12px;font-size:12.5px;min-height:36px;}
+.btn-sm:hover{border-color:var(--royal);color:var(--royal);}
+.btn-sm.chip-green{background:#0E7A57;color:#fff;border-color:transparent;}
+.btn-sm.chip-red{background:#C23B3B;color:#fff;border-color:transparent;}
+.btn-sm.chip-blue{background:#2748C9;color:#fff;border-color:transparent;}
+.btn-sm.chip-yellow{background:var(--amber);color:#2E2100;border-color:transparent;}
+.btn-danger{background:transparent;border:1px solid var(--brick);color:var(--brick);padding:6px 12px;font-size:12.5px;min-height:36px;}
+.btn-danger:hover{background:rgba(194,59,59,.09);}
+
+.table-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch;border:1px solid var(--line);border-radius:12px;margin-top:6px;}
+.table-wrap table{min-width:480px;}
+table{width:100%;border-collapse:collapse;font-size:13.5px;}
+th,td{text-align:start;padding:10px 12px;border-bottom:1px solid var(--line);}
+th{background:var(--thead);font-size:12px;font-weight:600;white-space:nowrap;}
+tr:last-child td{border-bottom:0;}
+tr:hover td{background:rgba(49,92,232,.04);}
+td input,td select{min-height:34px;padding:5px 8px;}
+.pill{display:inline-block;padding:2px 10px;border-radius:999px;font-size:11.5px;font-weight:600;}
+.pill-ok{background:rgba(21,150,106,.14);color:var(--emerald-ink);}
+.pill-bad{background:rgba(231,104,104,.16);color:var(--brick);}
+.pill-warn{background:rgba(242,181,68,.26);color:#7A4F00;}
+.studlink{color:var(--royal);cursor:pointer;font-weight:600;text-decoration:underline;text-underline-offset:2px;}
+.msg,.notice,.hwcard{border:1px solid var(--line);border-inline-start:4px solid var(--royal);padding:12px 14px;margin-bottom:10px;background:var(--card);border-radius:12px;}
+.notice{border-inline-start-color:var(--amber);background:linear-gradient(90deg,rgba(242,181,68,.12),transparent 45%);}
+.hwcard{border-inline-start-color:var(--teal);}
+.meta{color:var(--sub);font-size:12px;margin-top:6px;}
+.empty{color:var(--sub);font-size:13.5px;text-align:center;padding:22px 12px;}
+div.empty{border:1px dashed var(--line);border-radius:12px;}
+.error{color:var(--brick);font-size:13px;}
+
+.welcome{display:flex;flex-wrap:wrap;gap:14px;justify-content:space-between;align-items:center;padding:20px 22px;margin-bottom:14px;border-radius:var(--radius);color:#fff;background:linear-gradient(120deg,var(--deep),var(--navy) 50%,var(--royal));box-shadow:var(--shadow);}
+.welcome h1{font-size:22px;}
+.welcome p{margin:4px 0 0;color:#D5DEF5;font-size:13.5px;}
+.quick{display:flex;gap:8px;flex-wrap:wrap;}
+.quick button{background:rgba(255,255,255,.14);color:#fff;border:1px solid rgba(255,255,255,.32);}
+.quick button:hover{background:rgba(255,255,255,.26);}
+.dashgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:14px;margin-bottom:14px;}
+.dashgrid.sm{grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:10px;}
+.kpi{display:flex;align-items:center;gap:14px;min-height:96px;padding:16px;background:var(--card);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);transition:transform .18s,box-shadow .18s;}
+.kpi:hover{transform:translateY(-2px);box-shadow:0 10px 24px rgba(20,38,75,.1);}
+.kpi .ico{flex:none;width:46px;height:46px;border-radius:12px;display:grid;place-items:center;background:var(--tint);color:var(--ink);}
+.kpi .ico svg{width:22px;height:22px;}
+.kpi .big{font-size:26px;font-weight:700;line-height:1.1;}
+.kpi .lbl{font-size:12.5px;color:var(--sub);margin-top:3px;}
+.sm .kpi{min-height:0;padding:12px 14px;}
+.sm .big{font-size:22px;color:var(--ink);}
+.k-blue{--tint:rgba(49,92,232,.12);--ink:#2748C9;} .k-teal{--tint:rgba(15,159,149,.14);--ink:#0B766F;} .k-amber{--tint:rgba(242,181,68,.24);--ink:#8A5A00;} .k-violet{--tint:rgba(121,87,213,.14);--ink:#5B3FB5;} .k-coral{--tint:rgba(231,104,104,.15);--ink:#B42E2E;}
+.cols{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:14px;margin-bottom:14px;}
+.cols .card{margin:0;}
+.bar{display:flex;height:9px;border-radius:99px;background:rgba(100,116,139,.18);overflow:hidden;margin:8px 0;}
+.bar i{display:block;height:100%;}
+.b-p{background:linear-gradient(90deg,var(--teal),var(--emerald));} .b-a{background:var(--coral);} .b-l{background:var(--electric);} .b-c{background:var(--ac,var(--royal));}
+.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:12.5px;color:var(--sub);}
+.legend b{color:var(--text);}
+.dist{display:grid;grid-template-columns:70px 1fr 30px;align-items:center;gap:10px;font-size:13px;margin:6px 0;}
+.dist .bar{margin:0;}
+.li{display:flex;justify-content:space-between;gap:10px;padding:9px 0;border-bottom:1px solid var(--line);font-size:13.5px;}
+.li:last-child{border-bottom:0;}
+
+.classgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:14px;}
+.stamp{position:relative;overflow:hidden;background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:18px 16px 16px;box-shadow:var(--shadow);transition:transform .18s,box-shadow .18s;}
+.stamp:hover{transform:translateY(-2px);box-shadow:0 10px 24px rgba(20,38,75,.1);}
+.stamp::before{content:"";position:absolute;inset-inline:0;top:0;height:4px;background:var(--ac,var(--royal));}
+.ring{width:46px;height:46px;border-radius:12px;display:grid;place-items:center;font-weight:700;font-size:16px;color:var(--ac,var(--royal));background:color-mix(in srgb,var(--ac,var(--royal)) 14%,transparent);margin-bottom:10px;}
+.stamp h2{margin-bottom:8px;}
+.stat{display:flex;justify-content:space-between;font-size:13px;margin:4px 0;color:var(--sub);}
+.stat b{color:var(--text);}
+.stamp button{margin-top:10px;width:100%;}
+.warnpanel{border-inline-start:5px solid var(--amber);background:linear-gradient(90deg,rgba(242,181,68,.14),var(--card) 50%);}
+.profile{display:flex;gap:18px;align-items:flex-start;flex-wrap:wrap;}
+.profile>div:first-child{flex:0 0 110px;text-align:center;}
+.profile>div:last-child{flex:1;min-width:240px;}
+.subtabs,.classbtns{display:flex;gap:6px;overflow-x:auto;padding-bottom:4px;margin-bottom:12px;}
+.subtab,.classbtn{flex:none;padding:7px 14px;min-height:36px;border-radius:999px;background:var(--card);border:1px solid var(--field);color:var(--text);font-size:12.5px;font-weight:600;white-space:nowrap;}
+.subtab.active,.classbtn.active{background:linear-gradient(135deg,var(--royal),var(--violet));color:#fff;border-color:transparent;}
+.timetable{font-size:12px;}
+.timetable th,.timetable td{border:1px solid var(--line);padding:4px;text-align:center;}
+.timetable input{font-size:12px;padding:4px;text-align:center;min-height:32px;}
+.loginwrap{max-width:400px;margin:48px auto 0;padding:0 4px;}
+.toast{position:fixed;inset-inline-end:16px;bottom:16px;max-width:min(92vw,360px);background:var(--deep);color:#fff;padding:12px 16px;border-radius:12px;box-shadow:0 10px 30px rgba(0,0,0,.3);z-index:100;font-size:13.5px;display:none;}
+
+
+.dlg{border:0;border-radius:16px;padding:22px;max-width:min(92vw,440px);width:100%;box-shadow:0 20px 60px rgba(0,0,0,.35);background:var(--card);color:var(--text);}
+.dlg::backdrop{background:rgba(11,23,51,.55);}
+.dlg p{margin:0 0 6px;color:var(--sub);}
+.dlgbtns{display:flex;gap:10px;justify-content:flex-end;margin-top:16px;}
+.dlgbtns button{margin:0;}
+.skel{height:92px;border-radius:14px;margin-bottom:14px;background:linear-gradient(90deg,var(--line),var(--thead),var(--line));background-size:200% 100%;animation:sh 1.2s infinite;}
+@keyframes sh{to{background-position:-200% 0;}}
+.navbrand{display:flex;align-items:center;gap:10px;padding:6px 8px 10px;border-bottom:1px solid var(--line);margin-bottom:4px;font-weight:700;color:var(--crest);line-height:1.2;}
+.navbrand small{display:block;font-weight:500;color:var(--sub);font-size:11px;}
+.pager{display:flex;gap:10px;align-items:center;justify-content:space-between;margin:4px 0 10px;font-size:13px;color:var(--sub);}
+@media (max-width:899px){
+  .menubtn,body.authed .menubtn{display:none;}
+  body.authed .menubtn{display:inline-flex;}
+  #root.authed{display:block;}
+  .tabs{position:fixed;top:0;bottom:0;inset-inline-start:0;width:280px;max-width:86vw;max-height:none;z-index:50;border-radius:0;padding-top:calc(14px + env(safe-area-inset-top,0px));transform:translateX(-105%);transition:transform .2s;}
+  html[dir="rtl"] .tabs{transform:translateX(105%);}
+  body.navopen .tabs{transform:none;}
+  body.navopen .scrim{display:block;position:fixed;inset:0;background:rgba(11,23,51,.55);z-index:40;}
+  .content{padding:14px;}
+  .pagehead h1{font-size:24px;}
+}
+@media (max-width:600px){ .namebar{width:100%;justify-content:space-between;} .school-name{font-size:17px;} }
+@media (prefers-reduced-motion:reduce){ *{transition:none!important;animation:none!important;} }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="masthead">
+    <button class="menubtn" id="menuBtn" type="button" aria-label="Open menu" aria-expanded="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h18M3 12h18M3 18h18"/></svg></button>
+    <div class="crestrow">
+      <div class="crest">
+        <svg width="46" height="46" viewBox="0 0 46 46">
+          <circle cx="23" cy="23" r="21" fill="var(--navy)" stroke="var(--gold)" stroke-width="2"/>
+          <circle cx="23" cy="23" r="16" fill="none" stroke="var(--gold-soft)" stroke-width="1"/>
+          <path d="M23 13 L27 21 L23 19 L19 21 Z" fill="var(--gold)"/>
+          <rect x="14" y="24" width="18" height="9" rx="1" fill="none" stroke="var(--gold-soft)" stroke-width="1"/>
+          <line x1="14" y1="28" x2="32" y2="28" stroke="var(--gold-soft)" stroke-width=".75"/>
+        </svg>
+      </div>
+      <div>
+        <div class="school-name">GPS Khankot</div>
+        <div class="school-tag">School Management System · Nursery to Class 5</div>
+      </div>
+    </div>
+    <div class="namebar" id="namebar" style="display:none;"><span>Signed in as <b id="userLabel"></b><span class="role-badge" id="roleBadge"></span></span><span class="actions"><button class="signout" id="langBtn" type="button">اردو</button><button class="signout" id="signOutBtn" type="button">Sign out</button></span></div>
+  </div>
+  <div class="scrim" id="scrim"></div>
+  <div class="offline-banner" id="offlineBanner" role="status">You're offline — changes are saved on this device and will sync automatically when you're back online.</div>
+  <div class="content">
+  <div id="root"><div class="empty">Loading…</div></div>
+  </div>
+</div>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-storage-compat.js"></script>
+<script>
+const firebaseConfig = {
+  apiKey: "AIzaSyD3kc5RKyQMVtyS9yDWAJvdRxt3fO9wxDo",
+  authDomain: "gps-khankot-lms.firebaseapp.com",
+  projectId: "gps-khankot-lms",
+  storageBucket: "gps-khankot-lms.firebasestorage.app",
+  messagingSenderId: "762201981873",
+  appId: "1:762201981873:web:9e2d3733fcbdf96bebf390"
+};
+firebase.initializeApp(firebaseConfig);
+const firestore = firebase.firestore();
+const storage = firebase.storage();
+const secondaryApp = firebase.initializeApp(firebaseConfig, "Secondary");
+const secondaryAuth = secondaryApp.auth();
+firestore.enablePersistence({ synchronizeTabs: true }).catch(()=>{});
+
+async function uploadStudentPhoto(studentId, file){
+  const ext = (file.name.split(".").pop()||"jpg").toLowerCase();
+  const ref = storage.ref(`student-photos/${studentId}_${Date.now()}.${ext}`);
+  await ref.put(file);
+  const url = await ref.getDownloadURL();
+  await firestore.collection("students").doc(studentId).update({photoUrl: url});
+  logActivity("update", "students/"+studentId, "photo uploaded");
+  return url;
+}
+
+const ICONS={
+dashboard:'<rect x="3" y="3" width="7" height="9" rx="1"/><rect x="14" y="3" width="7" height="5" rx="1"/><rect x="14" y="12" width="7" height="9" rx="1"/><rect x="3" y="16" width="7" height="5" rx="1"/>',
+classes:'<path d="M3 21h18M5 21V9l7-5 7 5v12M9 21v-6h6v6"/>',
+students:'<path d="M17 21v-2a4 4 0 0 0-4-4H7a4 4 0 0 0-4 4v2"/><circle cx="10" cy="7" r="4"/><path d="M21 21v-2a4 4 0 0 0-3-3.9M16 3.1a4 4 0 0 1 0 7.8"/>',
+attendance:'<rect x="6" y="4" width="12" height="17" rx="2"/><path d="M9 4h6v2H9zM9 13l2 2 4-4"/>',
+grades:'<path d="M4 19V5a2 2 0 0 1 2-2h14v16H6a2 2 0 0 0-2 2zm0 0a2 2 0 0 0 2 2h14"/>',
+fine:'<circle cx="12" cy="12" r="9"/><path d="M12 7v10M9.5 9.5h4a1.5 1.5 0 0 1 0 3h-3a1.5 1.5 0 0 0 0 3h4"/>',
+homework:'<path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/>',
+notices:'<path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9M13.7 21a2 2 0 0 1-3.4 0"/>',
+messages:'<rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/>',
+timetable:'<rect x="3" y="4" width="18" height="17" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/>',
+activity:'<path d="M22 12h-4l-3 9L9 3l-3 9H2"/>',
+backup:'<ellipse cx="12" cy="5" rx="8" ry="3"/><path d="M4 5v14c0 1.7 3.6 3 8 3s8-1.3 8-3V5M4 12c0 1.7 3.6 3 8 3s8-1.3 8-3"/>',
+finance:'<path d="M3 10l9-6 9 6M5 10v8M9 10v8M15 10v8M19 10v8M3 20h18"/>',
+staff:'<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M19 8v6M22 11h-6"/>'
+};
+function icon(k){ return `<svg viewBox="0 0 24 24" aria-hidden="true">${ICONS[k]||""}</svg>`; }
+const NAV=[["Overview",[["dashboard","Dashboard"]]],["Academics",[["classes","Classes"],["students","Students"],["attendance","Attendance"],["grades","Grades"],["timetable","Timetable"]]],["School life",[["fine","Fine"],["homework","Homework"],["notices","Notices"],["messages","Messages"]]],["Administration",[["finance","Finance & Audit"],["activity","Activity"],["backup","Backup"]]]];
+function askConfirm(msg,typed){
+  return new Promise(res=>{
+    const d=document.createElement("dialog"); d.className="dlg"; d.setAttribute("aria-labelledby","dlgT");
+    d.innerHTML=`<h2 id="dlgT">${typed?"Please confirm":"Are you sure?"}</h2><p>${esc(msg)}</p>${typed?`<label for="dlgIn">Type <b>${typed}</b> to continue</label><input id="dlgIn" autocomplete="off" autocapitalize="characters">`:""}<div class="dlgbtns"><button type="button" class="btn-sm" id="dlgNo">Cancel</button><button type="button" class="btn-primary" id="dlgYes" ${typed?"disabled":""}>Confirm</button></div>`;
+    document.body.appendChild(d);
+    const done=v=>{ d.close(); d.remove(); res(v); };
+    const y=d.querySelector("#dlgYes"), inp=d.querySelector("#dlgIn");
+    d.querySelector("#dlgNo").onclick=()=>done(false);
+    d.addEventListener("cancel",e=>{ e.preventDefault(); done(false); });
+    if(inp) inp.oninput=()=>{ y.disabled = inp.value.trim().toUpperCase()!==typed.toUpperCase(); };
+    y.onclick=()=>done(true);
+    d.showModal(); (inp||y).focus();
+  });
+}
+function toast(msg){
+  let el=document.getElementById("toast");
+  if(!el){ el=document.createElement("div"); el.id="toast"; el.className="toast"; el.setAttribute("role","status"); document.body.appendChild(el); }
+  el.textContent=msg; el.style.display="block"; clearTimeout(el._t); el._t=setTimeout(()=>{el.style.display="none";},4000);
+}
+(function(){
+  const b=document.body, set=o=>{ b.classList.toggle("navopen",o); document.getElementById("menuBtn").setAttribute("aria-expanded",String(o)); };
+  document.getElementById("menuBtn").onclick=()=>set(!b.classList.contains("navopen"));
+  document.getElementById("scrim").onclick=()=>set(false);
+  document.addEventListener("keydown",e=>{
+    if(e.key==="Escape") set(false);
+    if((e.key==="Enter"||e.key===" ") && e.target.classList && e.target.classList.contains("studlink")){ e.preventDefault(); e.target.click(); }
+  });
+  window.closeNav=()=>set(false);
+})();
+
+let CURRENT_UID=null, CURRENT_USER="Staff", CURRENT_ROLE="teacher";
+
+async function logActivity(action, target, summary){
+  try{
+    await firestore.collection("activityLog").add({ user: CURRENT_USER, action, target, summary: (summary||"").toString().slice(0,140), at: Date.now() });
+  }catch(e){}
+}
+
+const db = {
+  collection(name){
+    return {
+      onSnapshot(cb){
+        return firestore.collection(name).onSnapshot(snap=>{
+          cb({ docs: snap.docs.map(d=>({ id:d.id, data:d.data() })) });
+        });
+      },
+      async add(obj){
+        const ref = await firestore.collection(name).add(obj);
+        logActivity("add", name, obj && (obj.name||obj.title||obj.subject||""));
+        return ref;
+      }
+    };
+  },
+  doc(path){
+    const ref = firestore.doc(path);
+    return {
+      onSnapshot(cb){
+        return ref.onSnapshot(snap=>{
+          cb({ exists: snap.exists, data: snap.exists ? snap.data() : undefined, id: snap.id });
+        });
+      },
+      async get(){ const s = await ref.get(); return { exists: s.exists, data: s.exists ? s.data() : undefined, id: s.id }; },
+      async set(obj){ await ref.set(obj, {merge:false}); logActivity("set", path, ""); },
+      async update(obj){ await ref.update(obj); logActivity("update", path, Object.keys(obj).join(",")); },
+      async delete(){ await ref.delete(); logActivity("delete", path, ""); }
+    };
+  }
+};
+
+window.addEventListener('unhandledrejection', function(e){
+  const reason = e && e.reason ? (e.reason.message || e.reason.code || JSON.stringify(e.reason)) : "unknown error";
+  toast("Save failed: " + reason);
+});
+window.addEventListener("online", ()=>{ const b=document.getElementById("offlineBanner"); if(b) b.classList.remove("show"); });
+window.addEventListener("offline", ()=>{ const b=document.getElementById("offlineBanner"); if(b) b.classList.add("show"); });
+if("serviceWorker" in navigator){ window.addEventListener("load", ()=> navigator.serviceWorker.register("sw.js").catch(()=>{})); }
+
+const CLASS_LIST = ["Nursery","LKG","UKG","Class 1","Class 2","Class 3","Class 4","Class 5"];
+const EXAM_TERMS = ["Weekly Test","Mid-Term","Final Term"];
+let selectedTerm = EXAM_TERMS[0];
+let genderFilter = "";
+let fineSubTab = "register", fineStudent = null, fineMonth = new Date().toISOString().slice(0,7), fineYear = new Date().toISOString().slice(0,4);
+function sortByRoll(list){
+  return [...list].sort((a,b)=>{
+    const ra = parseInt(a.rollNo,10), rb = parseInt(b.rollNo,10);
+    const na = isNaN(ra), nb = isNaN(rb);
+    if(na && nb) return (a.name||"").localeCompare(b.name||"");
+    if(na) return 1;
+    if(nb) return -1;
+    return ra-rb;
+  });
+}
+
+let LANG = localStorage.getItem("gps_lms_lang") || "en";
+const TR = {
+  "Dashboard":"ڈیش بورڈ","Classes":"جماعتیں","Students":"طلبہ","Attendance":"حاضری","Grades":"نتائج",
+  "Fine":"جرمانہ","Homework":"ہوم ورک","Notices":"نوٹسز","Messages":"پیغامات","Timetable":"ٹائم ٹیبل",
+  "Activity":"سرگرمی","Overview":"جائزہ","Finance & Audit":"مالی امور اور آڈٹ","Welcome back":"خوش آمدید","Active students":"فعال طلبہ","Today's attendance":"آج کی حاضری","Students by class":"جماعت وار طلبہ","Latest notices":"تازہ نوٹسز","Upcoming homework":"آئندہ ہوم ورک","Recent activity":"حالیہ سرگرمی","Take attendance":"حاضری لگائیں","Add student":"طالب علم شامل کریں","Post notice":"نوٹس لگائیں","Present":"حاضر","Absent":"غیر حاضر","Leave":"رخصت","Academics":"تعلیمی","School life":"سکول کی سرگرمیاں","Administration":"انتظامیہ","Backup":"بیک اپ","Staff":"عملہ",
+  "Staff sign-in":"عملے کے لیے سائن ان","Email":"ای میل","Password":"پاس ورڈ","Sign in":"سائن ان کریں",
+  "Sign out":"سائن آؤٹ","Signed in as":"بطور سائن ان",
+  "School Management System · Nursery to Class 5":"سکول مینجمنٹ سسٹم · نرسری تا پانچویں جماعت"
+};
+function t(s){ return LANG==="ur" ? (TR[s]||s) : s; }
+function applyLang(){ document.documentElement.lang=LANG; document.documentElement.dir=LANG==="ur"?"rtl":"ltr"; }
+applyLang();
+function toggleLang(){ LANG = LANG==="en" ? "ur" : "en"; localStorage.setItem("gps_lms_lang", LANG); applyLang(); renderTabs(); renderMasthead(); }
+function renderMasthead(){
+  document.querySelector(".school-tag").textContent = t("School Management System · Nursery to Class 5");
+  document.getElementById("langBtn").textContent = LANG==="en" ? "اردو" : "English";
+  document.querySelector(".namebar span").innerHTML = t("Signed in as") + " <b id=\"userLabel\">" + esc(CURRENT_USER) + "</b><span class=\"role-badge\" id=\"roleBadge\">" + esc(CURRENT_ROLE) + "</span>";
+}
+let students=[], homework=[], notices=[], activityLog=[], staffList=[], tab="dashboard", selectedStudent=null, ttDoc={grid:{}}, attDate=todayStr(), classFilter="", listenersOn=false, staffSubTab="profile", staffAttDate=todayStr();
+
+function todayStr(){ return new Date().toISOString().slice(0,10); }
+function render(html){ document.getElementById("root").innerHTML = html; }
+function esc(s){ return (s||"").toString().replace(/[<>&]/g, c=>({"<":"&lt;",">":"&gt;","&":"&amp;"}[c])); }
+function classOptions(sel){ return CLASS_LIST.map(c=>`<option ${c===sel?'selected':''}>${c}</option>`).join(""); }
+function myClass(){ if(CURRENT_ROLE==="admin") return null; const me=staffList.find(x=>x.id===CURRENT_UID); return (me && me.assignedClass) || ""; }
+function canEditClass(c){ return CURRENT_ROLE==="admin" || (!!myClass() && myClass()===c); }
+function lockedMsg(){ return myClass() ? "You can only change records for "+myClass()+"." : "No class is assigned to you yet. Ask the admin to assign your class."; }
+const AUTO_ABSENT_FINE={"Class 3":10,"Class 4":20,"Class 5":10};
+function phoneDigits(s){ return (s||"").replace(/[^0-9]/g,""); }
+
+// ---------------- LOGIN ----------------
+function renderLogin(err){
+  document.getElementById("root").classList.remove("authed"); document.body.classList.remove("authed","navopen");
+  document.getElementById("namebar").style.display="none";
+  render(`
+    <div class="loginwrap">
+      <div class="card">
+        <h2>${t("Staff sign-in")}</h2>
+        <p class="sub">Ask your admin to create your account first (Firebase Console → Authentication → Add user).</p>
+        <label>${t("Email")}</label><input id="li_email" type="email" autocomplete="username">
+        <label>${t("Password")}</label><input id="li_pass" type="password" autocomplete="current-password">
+        <button class="btn-primary" id="loginBtn" style="width:100%;">${t("Sign in")}</button>
+        ${err ? `<div class="error" style="margin-top:8px;">${esc(err)}</div>` : ""}
+        <button class="btn-sm" id="langBtnLogin" style="width:100%;margin-top:8px;">${LANG==="en"?"اردو":"English"}</button>
+      </div>
+    </div>
+  `);
+  document.getElementById("langBtnLogin").onclick = ()=>{ toggleLang(); renderLogin(err); };
+  document.getElementById("loginBtn").onclick = async ()=>{
+    const email = document.getElementById("li_email").value.trim();
+    const pass = document.getElementById("li_pass").value;
+    if(!email||!pass) return;
+    try{
+      await firebase.auth().signInWithEmailAndPassword(email, pass);
+    }catch(e){
+      renderLogin(e.message || "Sign-in failed. Check your email and password.");
+    }
+  };
+}
+
+firebase.auth().onAuthStateChanged(async (user)=>{
+  if(!user){ listenersOn=false; renderLogin(); return; }
+  CURRENT_UID = user.uid;
+  const staffRef = firestore.collection("staff").doc(user.uid);
+  let staffSnap = await staffRef.get();
+  if(!staffSnap.exists){
+    const countSnap = await firestore.collection("staff").limit(1).get();
+    const role = countSnap.empty ? "admin" : "teacher";
+    const name = (user.email||"Staff").split("@")[0];
+    await staffRef.set({ name, email:user.email||"", role, createdAt:Date.now() });
+    staffSnap = await staffRef.get();
+  }
+  const sd = staffSnap.data();
+  CURRENT_USER = sd.name || user.email || "Staff";
+  CURRENT_ROLE = (sd.role || "teacher").trim().toLowerCase();
+  document.getElementById("userLabel").textContent = CURRENT_USER;
+  document.getElementById("roleBadge").textContent = CURRENT_ROLE;
+  document.getElementById("namebar").style.display="flex"; document.body.classList.add("authed");
+  if(!navigator.onLine) document.getElementById("offlineBanner").classList.add("show");
+  init();
+});
+
+document.getElementById("signOutBtn").onclick = ()=> firebase.auth().signOut();
+document.getElementById("langBtn").onclick = toggleLang;
+
+// ---------------- INIT / LISTENERS ----------------
+function init(){
+  render(`<div class="skel"></div><div class="skel"></div><div class="skel"></div>`);
+  if(listenersOn){ tab="dashboard"; renderTabs(); return; }
+  listenersOn = true;
+  db.collection("activityLog").onSnapshot(snap=>{
+    activityLog=(snap.docs||[]).map(d=>({id:d.id, ...d.data})).sort((a,b)=>(b.at||0)-(a.at||0));
+    if(tab==="activity") renderTabs();
+  });
+  db.collection("staff").onSnapshot(snap=>{
+    staffList=(snap.docs||[]).map(d=>({id:d.id, ...d.data}));
+    if(tab==="staff") renderTabs();
+  });
+  db.collection("students").onSnapshot(snap=>{
+    students = (snap.docs||[]).map(d=>({id:d.id, ...d.data}));
+    if(selectedStudent && !students.find(s=>s.id===selectedStudent)) selectedStudent=null;
+    renderTabs();
+  });
+  db.collection("homework").onSnapshot(snap=>{
+    homework=(snap.docs||[]).map(d=>({id:d.id, ...d.data})).sort((a,b)=>(b.postedAt||0)-(a.postedAt||0));
+    if(tab==="homework"||tab==="dashboard") renderTabs();
+  });
+  db.collection("notices").onSnapshot(snap=>{
+    notices=(snap.docs||[]).map(d=>({id:d.id, ...d.data})).sort((a,b)=>(b.postedAt||0)-(a.postedAt||0));
+    if(tab==="notices"||tab==="dashboard") renderTabs();
+  });
+  db.doc("timetable/main").onSnapshot(snap=>{
+    ttDoc = (snap && snap.exists) ? snap.data : {grid:{}};
+    if(tab==="timetable" && !(document.activeElement && document.activeElement.classList.contains("tt-cell"))) renderTabs();
+  });
+  db.collection("finance").onSnapshot(snap=>{
+    finances=(snap.docs||[]).map(d=>({id:d.id, ...d.data})).sort((a,b)=>(b.date||"").localeCompare(a.date||"")||(b.at||0)-(a.at||0));
+    if(tab==="finance") renderTabs();
+  });
+  db.doc("financeSettings/main").onSnapshot(snap=>{
+    finSettings = (snap && snap.exists) ? snap.data : {classrooms:0, rates:{}};
+    if(tab==="finance" && !(document.activeElement && /^fin_/.test(document.activeElement.id))) renderTabs();
+  });
+  renderTabs();
+}
+
+window.__msgs = {};
+function setMsg(id, text){ window.__msgs[id] = text; const el = document.getElementById(id); if(el) el.textContent = text; }
+function setTab(t){ tab=t; window.__msgs = {}; if(window.closeNav) closeNav(); renderTabs(); window.scrollTo(0,0); }
+
+function renderTabs(){
+  const nav = NAV.map(([g,items])=>[g, g==="Administration" && CURRENT_ROLE==="admin" ? [...items,["staff","Staff"]] : items]);
+  const cur = nav.flatMap(([,i])=>i).find(([k])=>k===tab);
+  const ae = document.activeElement, keep = (ae && ae.id && !ae.id.startsWith("lf_")) ? {id:ae.id, a:ae.selectionStart, b:ae.selectionEnd} : null;
+  document.getElementById("root").classList.add("authed");
+  render(`
+    <nav class="tabs" aria-label="Main menu"><div class="navbrand"><svg width="32" height="32" viewBox="0 0 46 46" aria-hidden="true"><circle cx="23" cy="23" r="21" fill="var(--navy)" stroke="var(--gold)" stroke-width="2"/><path d="M23 13 L27 21 L23 19 L19 21 Z" fill="var(--gold)"/><rect x="14" y="24" width="18" height="9" rx="1" fill="none" stroke="var(--gold-soft)"/></svg><div>GPS Khankot<small>School Management</small></div></div>${nav.map(([g,items])=>`<div class="navgroup">${t(g)}</div>${items.map(([k,l])=>`<button type="button" class="tab ${tab===k?'active':''}" data-tab="${k}" title="${t(l)}" ${tab===k?'aria-current="page"':''}>${icon(k)}<span>${t(l)}</span></button>`).join("")}`).join("")}</nav>
+    <main class="main">${tab==="dashboard" ? "" : `<div class="pagehead"><h1>${t(cur?cur[1]:"")}</h1></div>`}<div id="panel"></div></main>
+  `);
+  renderMasthead();
+  document.querySelectorAll(".tab").forEach(el=>el.onclick=()=>setTab(el.dataset.tab));
+  const panel = document.getElementById("panel");
+  const views = {dashboard:viewDashboard, classes:viewClasses, students:viewStudents, attendance:viewAttendance, grades:viewGrades, fine:viewFine, homework:viewHomework, notices:viewNotices, messages:viewMessages, timetable:viewTimetable, activity:viewActivity, backup:viewBackup, staff:viewStaff, finance:viewFinance};
+  panel.innerHTML = views[tab] ? views[tab]() : "";
+  let n=0;
+  panel.querySelectorAll("label:not([for])").forEach(l=>{ const f=l.nextElementSibling; if(f && /^(INPUT|SELECT|TEXTAREA)$/.test(f.tagName)){ if(!f.id) f.id="lf_"+(n++); l.htmlFor=f.id; } });
+  wireTab();
+  Object.entries(window.__msgs||{}).forEach(([id,t])=>{ const el=document.getElementById(id); if(el) el.textContent=t; });
+  if(keep){ const el=document.getElementById(keep.id); if(el && el!==document.activeElement){ el.focus(); try{ el.setSelectionRange(keep.a,keep.b); }catch(e){} } }
+}
+
+// ---------------- DASHBOARD ----------------
+function viewDashboard(){
+  const active = students.filter(s=>!s.archived), today = todayStr();
+  const st = s=>(s.attendance||{})[today];
+  const present = active.filter(s=>st(s)==="present").length, absent = active.filter(s=>st(s)==="absent").length, leave = active.filter(s=>st(s)==="leave").length;
+  const unmarked = active.length-present-absent-leave;
+  const pct = active.length ? Math.round((present/active.length)*100) : 0;
+  const w = n=>active.length ? (n/active.length*100) : 0;
+  const hwDue = homework.filter(h=>!h.archived && h.dueDate===today).length;
+  const owing = active.filter(s=>fineTotals(s).outstanding>0);
+  const owed = owing.reduce((a,s)=>a+fineTotals(s).outstanding,0);
+  const notes = notices.filter(n=>!n.archived).slice(0,3);
+  const upcoming = homework.filter(h=>!h.archived && h.dueDate && h.dueDate>=today).sort((a,b)=>a.dueDate.localeCompare(b.dueDate)).slice(0,5);
+  const recent = activityLog.slice(0,5);
+  const counts = CLASS_LIST.map(c=>active.filter(s=>s.className===c).length), maxC = Math.max(1,...counts);
+  const dateStr = new Date().toLocaleDateString(LANG==="ur"?"ur-PK":"en-GB",{weekday:"long",day:"numeric",month:"long",year:"numeric"});
+  const kpi=(k,ic,big,lbl)=>`<div class="kpi ${k}"><div class="ico">${icon(ic)}</div><div><div class="big">${big}</div><div class="lbl">${lbl}</div></div></div>`;
+  return `
+    <section class="welcome">
+      <div><h1>${t("Welcome back")}, ${esc(CURRENT_USER)}</h1><p>${esc(dateStr)} · GPS Khankot</p></div>
+      <div class="quick"><button type="button" data-goto="attendance">${t("Take attendance")}</button><button type="button" data-goto="students">${t("Add student")}</button><button type="button" data-goto="notices">${t("Post notice")}</button></div>
+    </section>
+    <div class="dashgrid">
+      ${kpi("k-blue","students",active.length,t("Active students"))}
+      ${kpi("k-teal","attendance",pct+"%",`Present today (${present}/${active.length})`)}
+      ${kpi("k-violet","homework",hwDue,"Homework due today")}
+      ${kpi("k-amber","fine",money(owed),`Outstanding fines · ${owing.length} student${owing.length===1?"":"s"}`)}
+    </div>
+    <div class="cols">
+      <div class="card"><h2>${t("Today's attendance")}</h2>
+        <div class="bar" role="img" aria-label="Present ${present}, absent ${absent}, leave ${leave}, unmarked ${unmarked}"><i class="b-p" style="width:${w(present)}%"></i><i class="b-a" style="width:${w(absent)}%"></i><i class="b-l" style="width:${w(leave)}%"></i></div>
+        <div class="legend"><span>Present <b>${present}</b></span><span>Absent <b>${absent}</b></span><span>Leave <b>${leave}</b></span><span>Not marked <b>${unmarked}</b></span></div>
+      </div>
+      <div class="card"><h2>${t("Students by class")}</h2>
+        ${CLASS_LIST.map((c,i)=>`<div class="dist"><span>${c}</span><div class="bar"><i class="b-c" style="width:${counts[i]/maxC*100}%"></i></div><b>${counts[i]}</b></div>`).join("")}
+      </div>
+      <div class="card"><h2>${t("Latest notices")}</h2>
+        ${notes.length ? notes.map(n=>`<div class="notice"><b>${esc(n.title)}</b><div>${esc(n.message)}</div><div class="meta">${new Date(n.postedAt).toLocaleDateString()}</div></div>`).join("") : `<div class="empty">No notices posted yet.</div>`}
+      </div>
+      <div class="card"><h2>${t("Upcoming homework")}</h2>
+        ${upcoming.length ? upcoming.map(h=>`<div class="li"><span><b>${esc(h.subject)}</b> · ${esc(h.className)}</span><span>${dueBadge(h)} ${esc(h.dueDate)}</span></div>`).join("") : `<div class="empty">No upcoming homework.</div>`}
+      </div>
+      <div class="card"><h2>${t("Recent activity")}</h2>
+        ${recent.length ? recent.map(a=>`<div class="li"><span>${esc(a.user)} · ${esc(a.action)} ${esc(a.target)}</span><span class="meta" style="margin:0">${new Date(a.at).toLocaleString()}</span></div>`).join("") : `<div class="empty">Nothing logged yet.</div>`}
+      </div>
+    </div>
+  `;
+}
+function dueBadge(h){
+  if(!h.dueDate) return "";
+  const t0=todayStr();
+  return h.dueDate<t0 ? '<span class="pill pill-bad">Overdue</span>' : h.dueDate===t0 ? '<span class="pill pill-warn">Due today</span>' : '<span class="pill pill-ok">Upcoming</span>';
+}
+
+// ---------------- CLASSES ----------------
+const CLASS_ACCENTS=["#2748C9","#0B766F","#0E7050","#5B3FB5","#B83F3F","#A36A00","#3B63D9","#14264B"];
+function viewClasses(){
+  const promoBtn = CURRENT_ROLE==="admin" ? `<div class="card warnpanel"><h2>Year-end class promotion</h2><p class="sub">Moves every active student up one class (Nursery → LKG → ... → Class 5). Class 5 students are marked as graduated and archived. This affects the whole school at once and you will be asked to type PROMOTE to confirm.</p><button class="btn-danger" id="promoteBtn" type="button">Promote all students to next class</button></div>` : "";
+  const cards = CLASS_LIST.map((c,i)=>{
+    const list = students.filter(s=>s.className===c && !s.archived);
+    const present = list.filter(s=>(s.attendance||{})[attDate]==="present").length;
+    const initial = c.replace(/[^A-Za-z0-9]/g,"").slice(0,2).toUpperCase();
+    const pct = list.length ? Math.round(present/list.length*100) : null;
+    return `<div class="stamp" style="--ac:${CLASS_ACCENTS[i]}">
+      <div class="ring" aria-hidden="true">${initial}</div>
+      <h2>${c}</h2>
+      <div class="stat"><span>Enrolled</span><b>${list.length}</b></div>
+      <div class="stat"><span>Present today</span><b>${present}</b></div>
+      ${pct!==null ? `<div class="stat"><span>Attendance</span><b>${pct}%</b></div><div class="bar"><i class="b-c" style="width:${pct}%"></i></div>` : ""}
+      <button class="btn-sm" type="button" data-viewclass="${c}">View roster</button>
+    </div>`;
+  }).join("");
+  return `${promoBtn}<div class="classgrid">${cards}</div>`;
+}
+
+async function promoteAllStudents(){
+  if(!await askConfirm("This moves EVERY active student up one class and graduates (archives) Class 5 students. It affects the whole school and cannot be easily undone.","PROMOTE")) return;
+  const active = students.filter(s=>!s.archived);
+  for(const s of active){
+    const idx = CLASS_LIST.indexOf(s.className);
+    if(idx<0) continue;
+    if(idx === CLASS_LIST.length-1){
+      await firestore.collection("students").doc(s.id).update({archived:true, archivedAt:Date.now(), graduated:true});
+    } else {
+      await firestore.collection("students").doc(s.id).update({className: CLASS_LIST[idx+1]});
+    }
+  }
+  logActivity("promote", "students", `Promoted ${active.length} students`);
+  toast("Promotion complete.");
+}
+
+// ---------------- STUDENTS ----------------
+function viewStudents(){
+  const base = classFilter ? students.filter(s=>s.className===classFilter) : students;
+  const searched = window.__stuSearch ? base.filter(s=>{ const q=window.__stuSearch.toLowerCase(); return (s.name||"").toLowerCase().includes(q) || (s.fatherName||"").toLowerCase().includes(q) || String(s.rollNo||"")===q || (s.admissionNo||"").toLowerCase().includes(q); }) : base;
+  const full0 = sortByRoll(searched.filter(s=>!s.archived));
+  const full = window.__stuSort==="name" ? [...full0].sort((a,b)=>(a.name||"").localeCompare(b.name||"")) : full0;
+  const PAGE=25, pages=Math.max(1,Math.ceil(full.length/PAGE));
+  if(!(window.__stuPage>=1)) window.__stuPage=1; if(window.__stuPage>pages) window.__stuPage=pages;
+  const list = full.slice((window.__stuPage-1)*PAGE, window.__stuPage*PAGE);
+  const archived = searched.filter(s=>s.archived);
+  const rows = list.map(s=>`
+    <tr>
+      <td>${esc(s.rollNo||"-")}</td>
+      <td>${s.photoUrl?`<img src="${s.photoUrl}" style="width:28px;height:28px;border-radius:50%;object-fit:cover;vertical-align:middle;margin-right:6px;">`:""}<span class="studlink" tabindex="0" role="button" data-open="${s.id}">${esc(s.name)}</span></td>
+      <td>${esc(s.fatherName||"-")}</td>
+      <td>${esc(s.className||"-")}</td>
+      <td><select data-editgender="${s.id}" ${canEditClass(s.className)?"":"disabled"} aria-label="Gender" style="padding:4px;font-size:12px;"><option value="">-</option><option value="Male" ${s.gender==="Male"?"selected":""}>Boy</option><option value="Female" ${s.gender==="Female"?"selected":""}>Girl</option></select></td>
+      <td>${esc(s.guardianContact||"-")}</td>
+      <td><button class="btn-danger" data-del="${s.id}" ${canEditClass(s.className)?"":"disabled"}>Archive</button>${CURRENT_ROLE==="admin"?` <button class="btn-danger" data-harddel="${s.id}">Delete</button>`:""}</td>
+    </tr>`).join("");
+  const archRows = archived.map(s=>`
+    <tr>
+      <td>${esc(s.name)}</td><td>${esc(s.className||"-")}</td>
+      <td><button class="btn-sm" data-restore="${s.id}">Restore</button>${CURRENT_ROLE==="admin"?` <button class="btn-danger" data-harddel="${s.id}">Delete</button>`:""}</td>
+    </tr>`).join("");
+  return `
+    <div class="card">
+      <h2>Add student</h2>
+      <fieldset><legend>Student information</legend>
+        <div class="row">
+          <div><label>Full name <span class="req" aria-hidden="true">*</span></label><input id="s_name" required autocomplete="off" placeholder="e.g. Ahmed Ali"></div>
+          <div><label>Father name</label><input id="s_father" autocomplete="off"></div>
+          <div><label>Class</label><select id="s_class">${CURRENT_ROLE==="admin" ? classOptions() : (myClass() ? `<option>${esc(myClass())}</option>` : "")}</select></div>
+        </div>
+        <div class="row">
+          <div><label>Roll number</label><input id="s_roll" placeholder="e.g. 14"></div>
+          <div><label>Admission number</label><input id="s_admno" placeholder="e.g. GPS-2024-014"></div>
+          <div><label>Gender</label><select id="s_gender"><option value="">-</option><option value="Male">Male</option><option value="Female">Female</option></select></div>
+          <div><label>Date of birth</label><input id="s_dob" type="date"></div>
+        </div>
+      </fieldset>
+      <fieldset><legend>Additional information</legend>
+        <div class="row">
+          <div><label>Blood group</label><input id="s_blood" placeholder="e.g. O+"></div>
+          <div><label>Guardian contact (phone/email)</label><input id="s_contact" placeholder="e.g. 0300-0000000"></div>
+          <div><label>Emergency contact (if different)</label><input id="s_emergency"></div>
+        </div>
+      </fieldset>
+      <div id="s_err" class="field-err" role="alert"></div>
+      <button class="btn-primary" id="addStudentBtn" type="button">Add student</button>
+    </div>
+    <div class="card">
+      <div class="row">
+        <div><label>Search by name, father name, roll or admission no.</label><input id="stuSearch" type="search" value="${esc(window.__stuSearch||"")}" placeholder="Type to search..."></div>
+        <div><label>Filter by class</label><select id="stuClassFilter"><option value="">All classes</option>${classOptions(classFilter)}</select></div>
+        <div><label>Sort by</label><select id="stuSort"><option value="roll">Roll number</option><option value="name" ${window.__stuSort==="name"?"selected":""}>Name (A–Z)</option></select></div>
+      </div>
+      <h2>Roster (${full.length})</h2>${pages>1?`<div class="pager"><button type="button" class="btn-sm" data-page="${window.__stuPage-1}" ${window.__stuPage<=1?"disabled":""}>Previous</button><span>Page ${window.__stuPage} of ${pages}</span><button type="button" class="btn-sm" data-page="${window.__stuPage+1}" ${window.__stuPage>=pages?"disabled":""}>Next</button></div>`:""}
+      ${list.length ? `<div class="table-wrap"><table><tr><th>Roll</th><th>Name</th><th>Father</th><th>Class</th><th>Gender</th><th>Guardian</th><th></th></tr>${rows}</table></div>` : `<div class="empty">No students in this view yet.</div>`}
+    </div>
+    ${archived.length ? `<div class="card"><h2>Archived (${archived.length}) — not deleted, just hidden</h2><div class="table-wrap"><table><tr><th>Name</th><th>Class</th><th></th></tr>${archRows}</table></div></div>` : ""}
+  `;
+}
+
+async function addStudent(){
+  const name=document.getElementById("s_name").value.trim();
+  if(!name){ setMsg("s_err","Full name is required."); const f=document.getElementById("s_name"); if(f) f.focus(); return; }
+  setMsg("s_err","");
+  const className=document.getElementById("s_class").value;
+  if(!canEditClass(className)){ setMsg("s_err", lockedMsg()); return; }
+  const guardianContact=document.getElementById("s_contact").value.trim();
+  const rollNo=document.getElementById("s_roll").value.trim();
+  const admissionNo=document.getElementById("s_admno").value.trim();
+  const dob=document.getElementById("s_dob").value;
+  const bloodGroup=document.getElementById("s_blood").value.trim();
+  const emergencyContact=document.getElementById("s_emergency").value.trim();
+  const gender=document.getElementById("s_gender").value;
+  const fatherName=document.getElementById("s_father").value.trim();
+  const ab=document.getElementById("addStudentBtn"); if(ab) ab.disabled=true;
+  await db.collection("students").add({name, className, guardianContact, rollNo, admissionNo, dob, bloodGroup, emergencyContact, gender, fatherName, fine:{amount:0,reason:"",paid:true}, grades:{}, attendance:{}, messages:[]});
+  toast("Student added.");
+}
+
+// ---------------- ATTENDANCE ----------------
+function genderButtonsHtml(){
+  const opts = [["","All"],["Male","Boys"],["Female","Girls"]];
+  return `<div class="classbtns">${opts.map(([val,label])=>{
+    const active = genderFilter===val;
+    const cls = active ? (val==="Male"?"chip-boy":val==="Female"?"chip-girl":"chip-white") : "classbtn";
+    return `<button type="button" class="${cls}" data-genderbtn="${val}">${label}</button>`;
+  }).join("")}</div>`;
+}
+
+function attSummaryHtml(list){
+  const c={present:0,absent:0,leave:0}; list.forEach(s=>{ const v=(s.attendance||{})[attDate]; if(c[v]!==undefined) c[v]++; });
+  const un=list.length-c.present-c.absent-c.leave;
+  return `<div class="dashgrid sm">${[[t("Present"),c.present,"k-teal"],[t("Absent"),c.absent,"k-coral"],[t("Leave"),c.leave,"k-blue"],["Not marked",un,"k-amber"]].map(([l,n,k])=>`<div class="kpi ${k}"><div><div class="big">${n}</div><div class="lbl">${l}</div></div></div>`).join("")}</div>`;
+}
+function viewAttendance(){
+  const list = sortByRoll(students.filter(s=>!s.archived && (!classFilter || s.className===classFilter) && (!genderFilter || s.gender===genderFilter)));
+  const rows = list.map(s=>{
+    const status = (s.attendance||{})[attDate] || "unmarked";
+    const nameChip = s.gender==="Male" ? `<span class="chip-boy" style="padding:2px 8px;">${esc(s.name)}</span>` : s.gender==="Female" ? `<span class="chip-girl" style="padding:2px 8px;">${esc(s.name)}</span>` : esc(s.name);
+    const lk = canEditClass(s.className) ? "" : ' disabled title="Locked: not your class"';
+    return `<tr><td>${esc(s.rollNo||"-")}</td><td>${nameChip}</td><td>${esc(s.className||"-")}</td><td>
+      <button class="btn-sm ${status==='present'?'chip-green':''}" data-att="${s.id}|present" aria-pressed="${status==='present'}"${lk}>${t("Present")}</button>
+      <button class="btn-sm ${status==='absent'?'chip-red':''}" data-att="${s.id}|absent" aria-pressed="${status==='absent'}"${lk}>${t("Absent")}</button>
+      <button class="btn-sm ${status==='leave'?'chip-blue':''}" data-att="${s.id}|leave" aria-pressed="${status==='leave'}"${lk}>${t("Leave")}</button>
+    </td></tr>`;
+  }).join("");
+  return `
+    <div class="card">
+      <div class="row">
+        <div><label>Date</label><input type="date" id="attDatePick" value="${attDate}"></div>
+        <div><label>Class</label><select id="attClassPick"><option value="">All classes</option>${classOptions(classFilter)}</select></div>
+      </div>
+      <label>Filter by gender</label>
+      ${genderButtonsHtml()}
+    </div>
+    ${CURRENT_ROLE!=="admin" ? `<div class="card warnpanel"><b>Class lock:</b> ${esc(lockedMsg())} Other classes are locked.</div>` : ""}
+    <div class="card">
+      <h2>Mark attendance — ${attDate}</h2>
+      ${list.length ? `<div class="table-wrap"><table><tr><th>Roll</th><th>Name</th><th>Class</th><th>Status</th></tr>${rows}</table></div>` : `<div class="empty">No students match this filter yet.</div>`}
+    </div>
+    <div class="card">
+      <h2>Monthly attendance summary — ${attDate.slice(0,7)}</h2>
+      ${monthlyAttendanceTable(list, attDate.slice(0,7))}
+    </div>
+  `;
+}
+
+function monthlyAttendanceTable(list, monthKey){
+  if(!list.length) return `<div class="empty">No students to summarize.</div>`;
+  const rows = list.map(s=>{
+    const att = s.attendance||{};
+    let present=0, absent=0, leave=0, marked=0;
+    Object.keys(att).forEach(d=>{
+      if(!d.startsWith(monthKey)) return;
+      marked++;
+      if(att[d]==="present") present++;
+      else if(att[d]==="absent") absent++;
+      else if(att[d]==="leave") leave++;
+    });
+    const pct = marked ? Math.round((present/marked)*100) : 0;
+    const flag = marked && pct<75 ? `<span class="chip-red">${pct}%</span>` : `<span class="chip-green">${pct}%</span>`;
+    return `<tr><td>${esc(s.name)}</td><td>${esc(s.className||"-")}</td><td>${present}</td><td>${absent}</td><td>${leave}</td><td>${flag}</td></tr>`;
+  }).join("");
+  return `<div class="table-wrap"><table><tr><th>Name</th><th>Class</th><th>Present</th><th>Absent</th><th>Leave</th><th>Attendance %</th></tr>${rows}</table></div><p class="sub">Below 75% is flagged red — days with no mark aren't counted.</p>`;
+}
+
+// ---------------- GRADES ----------------
+function isLegacyFlatGrades(g){
+  return Object.values(g||{}).some(v=>v && typeof v==="object" && "obtained" in v);
+}
+
+function viewGrades(){
+  const list = classFilter ? students.filter(s=>s.className===classFilter) : students;
+  const opts = list.map(s=>`<option value="${s.id}" ${selectedStudent===s.id?'selected':''}>${esc(s.name)} (${esc(s.className||'-')})</option>`).join("");
+  const stu = students.find(s=>s.id===selectedStudent);
+  let body = `<div class="empty">Select a student to view/edit grades.</div>`;
+  const termOptions = ["Previous entries", ...EXAM_TERMS].map(t=>`<option value="${t}" ${selectedTerm===t?'selected':''}>${t}</option>`).join("");
+  if(stu){
+    const g = stu.grades||{};
+    const isLegacy = selectedTerm==="Previous entries";
+    const subjMap = isLegacy ? g : (g[selectedTerm]||{});
+    const rows = Object.keys(subjMap).map(subj=>{
+      const v = subjMap[subj];
+      const isObj = v && typeof v === "object";
+      const obtained = isObj ? v.obtained : v;
+      const total = isObj ? v.total : null;
+      const pct = (isObj && total && !isNaN(obtained)) ? ((obtained/total)*100).toFixed(1)+"%" : "-";
+      const editable = !isLegacy && isObj;
+      const bad = isObj && total && Number(obtained)>Number(total);
+      const obtainedCell = editable ? `<input type="number" data-editgrade="${esc(subj)}|obtained" value="${esc(obtained)}" style="width:70px;">` : esc(obtained);
+      const totalCell = editable ? `<input type="number" data-editgrade="${esc(subj)}|total" value="${esc(total!=null?total:'')}" style="width:70px;">` : esc(total!=null?total:"-");
+      return `<tr><td>${esc(subj)}</td><td>${obtainedCell}</td><td>${totalCell}</td><td><span class="${bad?'chip-red':'chip-blue'}">${pct}</span>${bad?' <span class="pill pill-bad">Marks exceed total</span>':""}</td><td>${isLegacy?"":`<button class="btn-danger" data-delgrade="${esc(subj)}">Remove</button>`}</td></tr>`;
+    }).join("");
+    body = `
+      <div class="row"><div><label>Exam term</label><select id="termPick">${termOptions}</select></div></div>
+      <div class="table-wrap"><table><tr><th>Subject</th><th>Marks Obtained</th><th>Total Marks</th><th>Percentage</th><th></th></tr>${rows || `<tr><td colspan="5" class="empty">No grades recorded for this term yet.</td></tr>`}</table></div>
+      ${isLegacy ? `<p class="sub">These are grades entered before exam terms existed. Pick a term above to add new grades.</p>` : `
+      <div class="row" style="margin-top:10px;">
+        <div><label>Subject</label><input id="g_subject" placeholder="e.g. Math"></div>
+        <div><label>Marks obtained</label><input id="g_value" type="number" placeholder="e.g. 85"></div>
+        <div><label>Total marks</label><input id="g_total" type="number" placeholder="e.g. 100"></div>
+      </div>
+      <button class="btn-primary" id="addGradeBtn">Save grade</button>`}
+      <button class="btn-accent2" id="printReportBtn">Print report card</button>
+    `;
+  }
+  const profile = stu ? `
+    <div class="card">
+      <h2>Student profile <span class="sub">(edits save automatically)</span></h2>
+      <div class="profile">
+        <div>
+          ${stu.photoUrl ? `<img src="${stu.photoUrl}" style="width:80px;height:80px;border-radius:50%;object-fit:cover;border:2px solid var(--gold);">` : `<div class="ring" style="margin:0 auto;">${esc((stu.name||"?").charAt(0))}</div>`}
+          <input type="file" id="photoFile" accept="image/*" style="margin-top:8px;font-size:10px;">
+          <button class="btn-sm" id="uploadPhotoBtn" style="margin-top:4px;">Upload photo</button>
+        </div>
+        <div>
+          <div class="row">
+            <div><label>Full name</label><input data-editstu="name" value="${esc(stu.name)}"></div>
+            <div><label>Father name</label><input data-editstu="fatherName" value="${esc(stu.fatherName||"")}"></div>
+            <div><label>Class</label><select data-editstu="className">${classOptions(stu.className)}</select></div>
+          </div>
+          <div class="row">
+            <div><label>Roll No</label><input data-editstu="rollNo" value="${esc(stu.rollNo||"")}"></div>
+            <div><label>Admission No</label><input data-editstu="admissionNo" value="${esc(stu.admissionNo||"")}"></div>
+          </div>
+          <div class="row">
+            <div><label>Date of birth</label><input type="date" data-editstu="dob" value="${esc(stu.dob||"")}"></div>
+            <div><label>Blood group</label><input data-editstu="bloodGroup" value="${esc(stu.bloodGroup||"")}"></div>
+            <div><label>Gender</label><select data-editstu="gender"><option value="">-</option><option value="Male" ${stu.gender==="Male"?"selected":""}>Male</option><option value="Female" ${stu.gender==="Female"?"selected":""}>Female</option></select></div>
+          </div>
+          <div class="row">
+            <div><label>Guardian contact</label><input data-editstu="guardianContact" value="${esc(stu.guardianContact||"")}"></div>
+            <div><label>Emergency contact</label><input data-editstu="emergencyContact" value="${esc(stu.emergencyContact||"")}"></div>
+          </div>
+        </div>
+      </div>
+      <button class="btn-whatsapp" id="parentSummaryBtn" style="margin-top:10px;">Print/Save parent summary</button>
+      <button class="btn-whatsapp" id="parentWaBtn" style="margin-top:10px;">Send quick summary on WhatsApp</button>
+    </div>` : "";
+  return `
+    <div class="card"><div class="row">
+      <div><label>Class</label><select id="gradeClassPick"><option value="">All classes</option>${classOptions(classFilter)}</select></div>
+      <div><label>Student</label><select id="gradeStudentPick"><option value="">-- choose --</option>${opts}</select></div>
+    </div></div>
+    ${profile}
+    <div class="card"><h2>Report card ${stu?`— ${esc(stu.name)}`:""}</h2>${body}</div>
+  `;
+}
+
+function printReportCard(stu){
+  const g = stu.grades||{};
+  const legacy = isLegacyFlatGrades(g);
+  const termsToShow = legacy ? ["Previous entries", ...EXAM_TERMS] : EXAM_TERMS;
+  let grandObtained=0, grandTotal=0;
+  const sections = termsToShow.map(term=>{
+    const subjMap = term==="Previous entries" ? g : (g[term]||{});
+    const subjects = Object.keys(subjMap);
+    if(!subjects.length) return "";
+    let sumObtained=0, sumTotal=0;
+    const rows = subjects.map(subj=>{
+      const v=subjMap[subj]; const isObj = v && typeof v==="object";
+      const obtained = isObj ? v.obtained : v; const total = isObj ? v.total : null;
+      if(isObj && total){ sumObtained+=Number(obtained)||0; sumTotal+=Number(total)||0; grandObtained+=Number(obtained)||0; grandTotal+=Number(total)||0; }
+      const pct = (isObj && total) ? ((obtained/total)*100).toFixed(1)+"%" : "-";
+      return `<tr><td>${esc(subj)}</td><td>${esc(obtained)}</td><td>${esc(total!=null?total:"-")}</td><td>${pct}</td></tr>`;
+    }).join("");
+    const termPct = sumTotal ? ((sumObtained/sumTotal)*100).toFixed(1)+"%" : "-";
+    return `<h3 style="margin-top:20px;">${term}</h3>
+      <div class="table-wrap"><table><tr><th>Subject</th><th>Marks Obtained</th><th>Total Marks</th><th>Percentage</th></tr>${rows}</table></div>
+      <div style="text-align:right;font-size:13px;margin-top:4px;">Term total: ${sumObtained}/${sumTotal} (${termPct})</div>`;
+  }).join("");
+  const grandPct = grandTotal ? ((grandObtained/grandTotal)*100).toFixed(1)+"%" : "-";
+  const w = window.open("", "_blank");
+  w.document.write(`
+    <html><head><title>Report Card - ${esc(stu.name)}</title>
+    <style>
+      body{font-family:Inter,Arial,sans-serif;padding:30px;color:#14264B;}
+      .hd{text-align:center;border-bottom:3px solid #F2B544;padding-bottom:12px;margin-bottom:18px;}
+      .hd h1{margin:6px 0 2px;font-size:24px;}
+      .hd p{margin:0;color:#555;font-size:13px;}
+      table{width:100%;border-collapse:collapse;margin-top:8px;}
+      th,td{border:1px solid #ccc;padding:8px;text-align:left;font-size:14px;}
+      th{background:#14264B;color:#fff;}
+      .info{display:flex;justify-content:space-between;font-size:13px;margin-top:14px;}
+      .overall{margin-top:20px;font-size:17px;font-weight:bold;text-align:right;border-top:2px solid #14264B;padding-top:10px;}
+      @media print{ button{display:none;} }
+    </style></head><body>
+    <div class="hd"><h1>GPS Khankot</h1><p>School Management System — Report Card</p></div>
+    <div class="info">
+      <div><b>Name:</b> ${esc(stu.name)}<br><b>Father:</b> ${esc(stu.fatherName||"-")}<br><b>Class:</b> ${esc(stu.className||"-")}<br><b>Roll No:</b> ${esc(stu.rollNo||"-")}</div>
+      <div><b>Admission No:</b> ${esc(stu.admissionNo||"-")}<br><b>Date:</b> ${new Date().toLocaleDateString()}</div>
+    </div>
+    ${sections || "<p>No grades recorded yet.</p>"}
+    <div class="overall">Overall (all terms): ${grandObtained}/${grandTotal||"-"} (${grandPct})</div>
+    <button onclick="window.print()" style="margin-top:20px;padding:10px 18px;">Print</button>
+    </body></html>
+  `);
+  w.document.close();
+}
+
+function printParentSummary(stu){
+  const today = todayStr();
+  const monthKey = today.slice(0,7);
+  const att = stu.attendance||{};
+  let present=0, marked=0;
+  Object.keys(att).forEach(d=>{ if(d.startsWith(monthKey)){ marked++; if(att[d]==="present") present++; } });
+  const attPct = marked ? Math.round((present/marked)*100) : 0;
+  const g = stu.grades||{};
+  const legacy = isLegacyFlatGrades(g);
+  const latestTermKey = legacy ? "Previous entries" : [...EXAM_TERMS].reverse().find(t=>g[t] && Object.keys(g[t]).length) || EXAM_TERMS[0];
+  const latestSubjects = legacy ? g : (g[latestTermKey]||{});
+  const gradeRows = Object.keys(latestSubjects).map(subj=>{
+    const v=latestSubjects[subj]; const isObj=v&&typeof v==="object";
+    const obtained=isObj?v.obtained:v; const total=isObj?v.total:null;
+    const pct=(isObj&&total)?((obtained/total)*100).toFixed(0)+"%":"-";
+    return `<tr><td>${esc(subj)}</td><td>${esc(obtained)}</td><td>${esc(total!=null?total:"-")}</td><td>${pct}</td></tr>`;
+  }).join("");
+  const fineT = fineTotals(stu);
+  const relevantHw = homework.filter(h=>!h.archived && h.className===stu.className).slice(0,3);
+  const hwList = relevantHw.map(h=>`<li>${esc(h.subject)}: ${esc(h.description)} (due ${esc(h.dueDate||"-")})</li>`).join("") || "<li>None</li>";
+  const latestNotice = notices.filter(n=>!n.archived)[0];
+  const w = window.open("", "_blank");
+  w.document.write(`
+    <html><head><title>Parent Summary - ${esc(stu.name)}</title>
+    <style>
+      body{font-family:Inter,Arial,sans-serif;padding:26px;color:#14264B;max-width:600px;margin:0 auto;}
+      .hd{text-align:center;border-bottom:3px solid #F2B544;padding-bottom:10px;margin-bottom:16px;}
+      table{width:100%;border-collapse:collapse;margin-top:8px;}
+      th,td{border:1px solid #ccc;padding:6px 8px;text-align:left;font-size:13px;}
+      th{background:#14264B;color:#fff;}
+      h3{margin-top:18px;margin-bottom:4px;font-size:15px;}
+      @media print{ button{display:none;} }
+    </style></head><body>
+    <div class="hd"><h1 style="margin:4px 0;">GPS Khankot</h1><p style="margin:0;font-size:12px;">Parent Summary Sheet</p></div>
+    <p><b>Name:</b> ${esc(stu.name)} &nbsp; <b>Father:</b> ${esc(stu.fatherName||"-")} &nbsp; <b>Class:</b> ${esc(stu.className||"-")} &nbsp; <b>Roll No:</b> ${esc(stu.rollNo||"-")}</p>
+    <h3>Attendance this month</h3><p>${present}/${marked} days present (${attPct}%)</p>
+    <h3>Latest grades — ${esc(latestTermKey)}</h3>
+    <div class="table-wrap"><table><tr><th>Subject</th><th>Obtained</th><th>Total</th><th>%</th></tr>${gradeRows || "<tr><td colspan=4>No grades recorded yet</td></tr>"}</table></div>
+    <h3>Fine status</h3><p>${fineT.count ? `Total fined: Rs. ${fineT.total}, paid: Rs. ${fineT.paid}, outstanding: Rs. ${fineT.outstanding}` : "No fine on record"}</p>
+    <h3>Recent homework (${esc(stu.className||"-")})</h3><ul>${hwList}</ul>
+    <h3>Latest school notice</h3><p>${latestNotice ? `<b>${esc(latestNotice.title)}:</b> ${esc(latestNotice.message)}` : "None"}</p>
+    <p style="margin-top:20px;font-size:11px;color:#777;">Generated ${new Date().toLocaleString()}</p>
+    <button onclick="window.print()" style="margin-top:10px;padding:10px 18px;">Print / Save as PDF</button>
+    </body></html>
+  `);
+  w.document.close();
+}
+
+function shareParentSummaryWhatsApp(stu){
+  const today = todayStr();
+  const monthKey = today.slice(0,7);
+  const att = stu.attendance||{};
+  let present=0, marked=0;
+  Object.keys(att).forEach(d=>{ if(d.startsWith(monthKey)){ marked++; if(att[d]==="present") present++; } });
+  const attPct = marked ? Math.round((present/marked)*100) : 0;
+  const fineT = fineTotals(stu);
+  const text = `GPS Khankot - Summary for ${stu.name} (${stu.className})\nAttendance this month: ${present}/${marked} (${attPct}%)\nFine: ${fineT.count ? "Total Rs."+fineT.total+", outstanding Rs."+fineT.outstanding : "None"}`;
+  const digits = phoneDigits(stu.guardianContact);
+  window.open(digits ? `https://wa.me/${digits}?text=${encodeURIComponent(text)}` : `https://api.whatsapp.com/send?text=${encodeURIComponent(text)}`, "_blank");
+}
+
+// ---------------- FINE (government institution: full fine history per student) ----------------
+function fineEntries(s){
+  if(Array.isArray(s.fines)) return s.fines;
+  const f = s.fine;
+  if(f && Number(f.amount)>0) return [{id:"legacy", amount:Number(f.amount)||0, reason:f.reason||"", date:"", paid:!!f.paid}];
+  return [];
+}
+function fineTotals(s){
+  const e = fineEntries(s);
+  const total = e.reduce((a,x)=>a+(Number(x.amount)||0),0);
+  const outstanding = e.filter(x=>!x.paid).reduce((a,x)=>a+(Number(x.amount)||0),0);
+  return {total, outstanding, paid: total-outstanding, count: e.length};
+}
+async function saveFineEntries(studentId, entries){
+  const outstanding = entries.filter(x=>!x.paid).reduce((a,x)=>a+(Number(x.amount)||0),0);
+  const last = entries[entries.length-1];
+  await db.doc("students/"+studentId).update({fines: entries, fine:{amount: outstanding, reason: last?(last.reason||""):"", paid: outstanding===0}});
+}
+function money(n){ return "Rs. "+Number(n||0).toLocaleString(); }
+function monthLabel(m){
+  const d = new Date((m||"")+"-01");
+  return isNaN(d) ? (m||"") : d.toLocaleString("en",{month:"long",year:"numeric"});
+}
+function fineStudentList(){
+  return sortByRoll((classFilter ? students.filter(s=>s.className===classFilter) : students).filter(s=>!s.archived));
+}
+
+function classButtonsHtml(){
+  const chips = [["","All classes"], ...CLASS_LIST.map(c=>[c,c])];
+  return `<div class="classbtns">${chips.map(([val,label])=>`<button type="button" class="classbtn ${classFilter===val?'active':''}" data-classbtn="${val}">${label}</button>`).join("")}</div>`;
+}
+
+function viewFine(){
+  const nav = `<div class="subtabs">
+    <button type="button" class="subtab ${fineSubTab==='register'?'active':''}" data-finesub="register">Fine Register</button>
+    <button type="button" class="subtab ${fineSubTab==='monthly'?'active':''}" data-finesub="monthly">Monthly</button>
+    <button type="button" class="subtab ${fineSubTab==='yearly'?'active':''}" data-finesub="yearly">Yearly</button>
+  </div>`;
+  const body = fineSubTab==="monthly" ? viewFineMonthly() : fineSubTab==="yearly" ? viewFineYearly() : viewFineRegister();
+  return nav + `<div class="card">${classButtonsHtml()}</div>` + body;
+}
+
+function viewFineRegister(){
+  const list = fineStudentList();
+  const opts = list.map(s=>`<option value="${s.id}" ${fineStudent===s.id?'selected':''}>${esc(s.rollNo||"-")}. ${esc(s.name)}</option>`).join("");
+  let sumT=0,sumP=0,sumO=0;
+  const rows = list.map(s=>{
+    const t = fineTotals(s); sumT+=t.total; sumP+=t.paid; sumO+=t.outstanding;
+    return `<tr><td>${esc(s.rollNo||"-")}</td><td><span class="studlink" tabindex="0" role="button" data-finestu="${s.id}">${esc(s.name)}</span></td><td>${esc(s.className||"-")}</td><td>${t.total?money(t.total):"-"}</td><td>${t.paid?money(t.paid):"-"}</td><td>${t.outstanding>0?`<span class="chip-red">${money(t.outstanding)}</span>`:`<span class="pill pill-ok">Clear</span>`}</td></tr>`;
+  }).join("");
+  const stu = students.find(s=>s.id===fineStudent);
+  let history = "";
+  if(stu){
+    const entries = fineEntries(stu).slice().sort((a,b)=>(b.date||"").localeCompare(a.date||""));
+    const t = fineTotals(stu);
+    const erows = entries.map(x=>`<tr>
+      <td><input type="date" data-fineedit="${x.id}|date" value="${esc(x.date||"")}" style="width:140px;"></td>
+      <td><input data-fineedit="${x.id}|reason" value="${esc(x.reason||"")}" style="width:150px;"></td>
+      <td><input type="number" data-fineedit="${x.id}|amount" value="${x.amount||0}" style="width:80px;"></td>
+      <td><button class="btn-sm ${x.paid?'chip-green':'chip-red'}" style="margin-top:0;" data-finetoggle="${x.id}">${x.paid?"Paid":"Unpaid"}</button></td>
+      <td><button class="btn-danger" data-fineremove="${x.id}">Remove</button></td>
+    </tr>`).join("");
+    history = `<div class="card">
+      <h2>Complete fine record — ${esc(stu.name)}</h2>
+      <p class="sub">Roll ${esc(stu.rollNo||"-")}, ${esc(stu.className||"-")}. Total fined <b>${money(t.total)}</b>, paid <b>${money(t.paid)}</b>, outstanding <b>${money(t.outstanding)}</b> (${t.count} fine${t.count===1?"":"s"}). Edits save automatically.</p>
+      ${erows ? `<div class="table-wrap"><table><tr><th>Date</th><th>Reason</th><th>Amount</th><th>Status</th><th></th></tr>${erows}</table></div>` : `<div class="empty">No fines on record for this student.</div>`}
+    </div>`;
+  }
+  return `
+    <div class="dashgrid sm"><div class="kpi k-blue"><div><div class="big">${money(sumT)}</div><div class="lbl">Total fined</div></div></div><div class="kpi k-teal"><div><div class="big">${money(sumP)}</div><div class="lbl">Paid</div></div></div><div class="kpi k-coral"><div><div class="big">${money(sumO)}</div><div class="lbl">Outstanding</div></div></div></div>
+    <div class="card">
+      <h2>Add a fine</h2>
+      <div class="row">
+        <div><label>Student</label><select id="fineStudentPick"><option value="">-- choose --</option>${opts}</select></div>
+        <div><label>Amount (Rs.)</label><input id="fineAmount" type="number" min="0"></div>
+      </div>
+      <div class="row">
+        <div><label>Reason</label><input id="fineReason" placeholder="e.g. Late to class"></div>
+        <div><label>Date</label><input id="fineDate" type="date" value="${todayStr()}"></div>
+      </div>
+      <button class="btn-primary" id="addFineBtn">Add fine</button>
+    </div>
+    ${history}
+    <div class="card">
+      <h2>All students — total fine ${classFilter?`(${esc(classFilter)})`:""}</h2>
+      <p class="sub">For discipline or damages, not tuition (government school, no fees charged). Tap a name to see and edit that student's complete fine record.</p>
+      ${list.length ? `<div class="table-wrap"><table><tr><th>Roll</th><th>Name</th><th>Class</th><th>Total fined</th><th>Paid</th><th>Outstanding</th></tr>${rows}<tr><td></td><td><b>Total</b></td><td></td><td><b>${money(sumT)}</b></td><td><b>${money(sumP)}</b></td><td><b>${money(sumO)}</b></td></tr></table></div>` : `<div class="empty">No students in this view yet.</div>`}
+      <button class="btn-sm" id="downloadFinesBtn" style="margin-top:10px;">Download all fines (.csv)</button>
+    </div>
+  `;
+}
+
+function viewFineMonthly(){
+  const list = fineStudentList();
+  const m = fineMonth;
+  let sumM=0,sumOut=0,sumAll=0;
+  const rows = list.map(s=>{
+    const es = fineEntries(s).filter(x=>(x.date||"").slice(0,7)===m);
+    const amt = es.reduce((a,x)=>a+(Number(x.amount)||0),0);
+    const out = es.filter(x=>!x.paid).reduce((a,x)=>a+(Number(x.amount)||0),0);
+    const t = fineTotals(s);
+    sumM+=amt; sumOut+=out; sumAll+=t.total;
+    return `<tr><td>${esc(s.rollNo||"-")}</td><td><span class="studlink" tabindex="0" role="button" data-finestu="${s.id}">${esc(s.name)}</span></td><td>${esc(s.className||"-")}</td><td>${es.length||"-"}</td><td>${amt?money(amt):"-"}</td><td>${out?`<span class="chip-red">${money(out)}</span>`:"-"}</td><td><b>${t.total?money(t.total):"-"}</b></td></tr>`;
+  }).join("");
+  return `
+    <div class="card"><label>Month</label><input type="month" id="fineMonthPick" value="${esc(m)}" style="max-width:200px;"></div>
+    <div class="card">
+      <h2>Fines in ${esc(monthLabel(m))} ${classFilter?`(${esc(classFilter)})`:""}</h2>
+      ${list.length ? `<div class="table-wrap"><table><tr><th>Roll</th><th>Name</th><th>Class</th><th>Fines</th><th>This month</th><th>Unpaid this month</th><th>All-time total</th></tr>${rows}<tr><td></td><td><b>Total</b></td><td></td><td></td><td><b>${money(sumM)}</b></td><td><b>${money(sumOut)}</b></td><td><b>${money(sumAll)}</b></td></tr></table></div>` : `<div class="empty">No students in this view yet.</div>`}
+      <p class="sub">All-time total is each student's complete fine record. Fines saved without a date count only in the all-time total; open the student's record to add the date.</p>
+    </div>
+  `;
+}
+
+function viewFineYearly(){
+  const list = fineStudentList();
+  const y = String(fineYear);
+  const mons = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+  const colTotals = Array(12).fill(0);
+  let sumY=0,sumAll=0;
+  const rows = list.map(s=>{
+    const per = Array(12).fill(0);
+    fineEntries(s).forEach(x=>{
+      const d = x.date||"";
+      if(d.slice(0,4)===y){ const mi = parseInt(d.slice(5,7),10)-1; if(mi>=0 && mi<12) per[mi]+=Number(x.amount)||0; }
+    });
+    const yt = per.reduce((a,b)=>a+b,0);
+    const t = fineTotals(s);
+    per.forEach((v,i)=>colTotals[i]+=v); sumY+=yt; sumAll+=t.total;
+    return `<tr><td>${esc(s.rollNo||"-")}</td><td><span class="studlink" tabindex="0" role="button" data-finestu="${s.id}">${esc(s.name)}</span></td>${per.map(v=>`<td>${v||"-"}</td>`).join("")}<td><b>${yt?money(yt):"-"}</b></td><td><b>${t.total?money(t.total):"-"}</b></td></tr>`;
+  }).join("");
+  return `
+    <div class="card"><label>Year</label><input type="number" id="fineYearPick" value="${esc(y)}" min="2000" max="2100" style="max-width:140px;"></div>
+    <div class="card">
+      <h2>Fines in ${esc(y)} ${classFilter?`(${esc(classFilter)})`:""}</h2>
+      ${list.length ? `<div class="table-wrap"><table><tr><th>Roll</th><th>Name</th>${mons.map(m=>`<th>${m}</th>`).join("")}<th>Year total</th><th>All-time total</th></tr>${rows}<tr><td></td><td><b>Total</b></td>${colTotals.map(v=>`<td><b>${v||"-"}</b></td>`).join("")}<td><b>${money(sumY)}</b></td><td><b>${money(sumAll)}</b></td></tr></table></div>` : `<div class="empty">No students in this view yet.</div>`}
+      <p class="sub">Monthly amounts are in Rs. Year total covers ${esc(y)} only; all-time total is the student's complete fine record, including undated fines.</p>
+    </div>
+  `;
+}
+
+function downloadFinesCsv(){
+  const header = "Roll No,Name,Father Name,Class,Date,Reason,Amount,Status\n";
+  const rows = [];
+  sortByRoll(students.filter(s=>!s.archived)).forEach(s=>{
+    fineEntries(s).forEach(x=>{
+      rows.push([s.rollNo||"", s.name, s.fatherName||"", s.className||"", x.date||"", x.reason||"", x.amount||0, x.paid?"Paid":"Unpaid"].map(v=>`"${(v+"").replace(/"/g,'""')}"`).join(","));
+    });
+  });
+  downloadBlob(header+rows.join("\n"), "text/csv", "gps-khankot-fines-"+todayStr()+".csv");
+}
+
+// ---------------- HOMEWORK ----------------
+function viewHomework(){
+  const base = classFilter ? homework.filter(h=>h.className===classFilter) : homework;
+  const list = base.filter(h=>!h.archived);
+  const items = list.map(h=>`<div class="hwcard">
+      <input data-edithw="${h.id}|subject" value="${esc(h.subject)}" style="font-weight:700;margin-bottom:4px;">
+      <textarea data-edithw="${h.id}|description" style="min-height:40px;">${esc(h.description)}</textarea>
+      <div class="meta">${dueBadge(h)} Due: <input type="date" data-edithw="${h.id}|dueDate" value="${esc(h.dueDate||"")}" style="width:140px;display:inline-block;"> · Posted ${new Date(h.postedAt).toLocaleDateString()}
+        <button class="btn-danger" style="margin-left:8px;" data-delhw="${h.id}">Archive</button>
+      </div>
+    </div>`).join("");
+  return `
+    <div class="card">
+      <h2>Post homework / assignment</h2>
+      <div class="row">
+        <div><label>Class</label><select id="hw_class">${classOptions()}</select></div>
+        <div><label>Subject</label><input id="hw_subject" placeholder="e.g. Science"></div>
+      </div>
+      <label>Description</label><textarea id="hw_desc" placeholder="e.g. Complete worksheet page 12, questions 1-5"></textarea>
+      <label>Due date</label><input type="date" id="hw_due">
+      <button class="btn-accent2" id="postHwBtn">Post homework</button>
+    </div>
+    <div class="card">
+      <div class="row"><div><label>Filter by class</label><select id="hwClassPick"><option value="">All classes</option>${classOptions(classFilter)}</select></div></div>
+      <h2>Assigned homework</h2>
+      ${items || `<div class="empty">No homework posted yet.</div>`}
+    </div>
+  `;
+}
+
+// ---------------- NOTICES ----------------
+function viewNotices(){
+  const items = notices.filter(n=>!n.archived).map(n=>{
+    const waText = encodeURIComponent(n.title + " — " + n.message);
+    return `<div class="notice">
+      <input data-editnotice="${n.id}|title" value="${esc(n.title)}" style="font-weight:700;margin-bottom:4px;">
+      <textarea data-editnotice="${n.id}|message" style="min-height:40px;">${esc(n.message)}</textarea>
+      <div class="meta">${new Date(n.postedAt).toLocaleString()} <button class="btn-danger" style="margin-left:8px;" data-delnotice="${n.id}">Archive</button></div>
+      <a href="https://api.whatsapp.com/send?text=${waText}" target="_blank" rel="noopener"><button class="btn-whatsapp" type="button">Share via WhatsApp</button></a>
+    </div>`;
+  }).join("");
+  return `
+    <div class="card">
+      <h2>Post a school notice</h2>
+      <label>Title</label><input id="nt_title" placeholder="e.g. School closed Friday">
+      <label>Message</label><textarea id="nt_msg"></textarea>
+      <button class="btn-primary" id="postNoticeBtn">Post notice</button>
+    </div>
+    <div class="card"><h2>All notices</h2>${items || `<div class="empty">No notices posted yet.</div>`}</div>
+  `;
+}
+
+// ---------------- MESSAGES ----------------
+function viewMessages(){
+  const opts = students.map(s=>`<option value="${s.id}" ${selectedStudent===s.id?'selected':''}>${esc(s.name)}</option>`).join("");
+  const stu = students.find(s=>s.id===selectedStudent);
+  let body = `<div class="empty">Select a student to message their guardian.</div>`;
+  if(stu){
+    const msgs=(stu.messages||[]).slice().reverse();
+    const digits = phoneDigits(stu.guardianContact);
+    body = `
+      ${msgs.length ? msgs.map(m=>`<div class="msg">${esc(m.text)}<div class="meta">${new Date(m.at).toLocaleString()}</div></div>`).join("") : `<div class="empty">No messages yet.</div>`}
+      <label>New message to ${esc(stu.guardianContact||"guardian")}</label>
+      <textarea id="msgText" placeholder="e.g. Your child did great in today's reading assessment."></textarea>
+      <button class="btn-primary" id="sendMsgBtn">Log message sent</button>
+      ${digits ? `<button class="btn-whatsapp" id="waMsgBtn" type="button">Open in WhatsApp</button>` : `<p class="sub">Add a phone number to guardian contact to enable WhatsApp.</p>`}
+    `;
+  }
+  return `
+    <div class="card"><label>Student</label><select id="msgStudentPick"><option value="">-- choose --</option>${opts}</select></div>
+    <div class="card"><h2>Parent communication ${stu?`— ${esc(stu.name)}`:""}</h2>${body}</div>
+  `;
+}
+
+// ---------------- TIMETABLE ----------------
+function viewTimetable(){
+  const days=["Mon","Tue","Wed","Thu","Fri"];
+  const periods=[1,2,3,4,5,6];
+  const grid = ttDoc.grid || {};
+  const cls = classFilter || CLASS_LIST[0];
+  let head = `<tr><th>Period</th>${days.map(d=>`<th>${d}</th>`).join("")}</tr>`;
+  let body = periods.map(p=>`<tr><td>${p}</td>${days.map(d=>{
+    const key=cls+"_"+d+"_"+p; return `<td><input class="tt-cell" data-tt="${key}" value="${esc(grid[key]||"")}" placeholder="Subject"></td>`;
+  }).join("")}</tr>`).join("");
+  return `
+    <div class="card"><div class="row"><div><label>Class</label><select id="ttClassPick">${classOptions(cls)}</select></div></div></div>
+    <div class="card"><h2>Weekly timetable — ${cls}</h2><div class="table-wrap"><table class="timetable">${head}${body}</table></div><p class="sub">Edits save automatically as you type — no need to press Save.</p></div>
+  `;
+}
+
+// ---------------- ACTIVITY ----------------
+function viewActivity(){
+  const byUser = {};
+  activityLog.forEach(a=>{ byUser[a.user] = Math.max(byUser[a.user]||0, a.at||0); });
+  const users = Object.keys(byUser).sort((a,b)=>byUser[b]-byUser[a]);
+  const userCards = users.map(u=>`<div class="card" style="display:inline-block;min-width:150px;margin-right:8px;">
+      <b>${esc(u)}</b><div class="sub">Last active: ${new Date(byUser[u]).toLocaleString()}</div>
+    </div>`).join("");
+  const rows = activityLog.slice(0,80).map(a=>`<tr>
+      <td>${new Date(a.at).toLocaleString()}</td><td>${esc(a.user)}</td><td>${esc(a.action)}</td><td>${esc(a.target)}</td><td>${esc(a.summary||"")}</td>
+    </tr>`).join("");
+  return `
+    <div class="card"><h2>Staff activity</h2>${userCards || `<div class="empty">No activity yet.</div>`}</div>
+    <div class="card"><h2>Recent changes (${activityLog.length} total logged)</h2>
+      ${rows ? `<div class="table-wrap"><table><tr><th>When</th><th>Who</th><th>Action</th><th>Where</th><th>Detail</th></tr>${rows}</table></div>` : `<div class="empty">Nothing logged yet.</div>`}
+    </div>
+  `;
+}
+
+// ---------------- STAFF (admin only) ----------------
+function viewStaff(){
+  const nav = `<div class="subtabs">
+    <button type="button" class="subtab ${staffSubTab==='profile'?'active':''}" data-staffsub="profile">Staff Profile</button>
+    <button type="button" class="subtab ${staffSubTab==='attendance'?'active':''}" data-staffsub="attendance">Staff Attendance</button>
+  </div>`;
+  return nav + (staffSubTab==="attendance" ? viewStaffAttendance() : viewStaffProfile());
+}
+
+function viewStaffProfile(){
+  const rows = staffList.map(s=>`<tr>
+      <td><input data-namepick="${s.id}" value="${esc(s.name)}" style="width:95px;"></td>
+      <td>${esc(s.email||"-")}</td>
+      <td><input data-subjectpick="${s.id}" value="${esc(s.subjectsTaught||"")}" placeholder="e.g. Math, Science" style="width:100px;"></td>
+      <td><select data-classpick="${s.id}"><option value="">-</option>${classOptions(s.assignedClass)}</select></td>
+      <td><select data-rolepick="${s.id}"><option value="teacher" ${s.role==='teacher'?'selected':''}>Teacher</option><option value="admin" ${s.role==='admin'?'selected':''}>Admin</option></select></td>
+      <td>${s.id===CURRENT_UID ? "" : `<button class="btn-danger" data-removestaff="${s.id}">Remove</button>`}</td>
+    </tr>`).join("");
+  return `
+    <div class="card">
+      <h2>Add a teacher</h2>
+      <p class="sub">Creates their login directly — no need to use Firebase Console. Give them the email and password you set here.</p>
+      <div class="row">
+        <div><label>Full name</label><input id="nt_name"></div>
+        <div><label>Email</label><input id="nt_email" type="email"></div>
+      </div>
+      <label>Temporary password (share with them)</label><input id="nt_pass" type="text" placeholder="e.g. Welcome@2026">
+      <button class="btn-primary" id="addTeacherBtn">Add teacher</button>
+      <div id="addTeacherStatus" class="sub"></div>
+    </div>
+    <div class="card">
+      <h2>Staff directory & roles</h2>
+      <p class="sub">Changes save automatically. "Remove" deletes their profile here; to fully block their login, also delete their account in Firebase Console → Authentication → Users.</p>
+      ${rows ? `<div class="table-wrap"><table><tr><th>Name</th><th>Email</th><th>Subject(s)</th><th>Assigned class</th><th>Role</th><th></th></tr>${rows}</table></div>` : `<div class="empty">No staff yet.</div>`}
+    </div>
+  `;
+}
+
+function viewStaffAttendance(){
+  const rows = staffList.map(s=>{
+    const status = (s.attendance||{})[staffAttDate] || "unmarked";
+    return `<tr><td>${esc(s.name)}</td><td>${esc(s.email||"-")}</td><td>
+      <button class="btn-sm ${status==='present'?'chip-green':''}" data-staffatt="${s.id}|present">${t("Present")}</button>
+      <button class="btn-sm ${status==='absent'?'chip-red':''}" data-staffatt="${s.id}|absent">${t("Absent")}</button>
+      <button class="btn-sm ${status==='leave'?'chip-yellow':''}" data-staffatt="${s.id}|leave">C / Leave</button>
+    </td></tr>`;
+  }).join("");
+  return `
+    <div class="card"><label>Date</label><input type="date" id="staffAttDatePick" value="${staffAttDate}"></div>
+    <div class="card">
+      <h2>Mark staff attendance — ${staffAttDate}</h2>
+      ${rows ? `<div class="table-wrap"><table><tr><th>Name</th><th>Email</th><th>Status</th></tr>${rows}</table></div>` : `<div class="empty">No staff yet.</div>`}
+    </div>
+  `;
+}
+
+async function addTeacher(){
+  const name=document.getElementById("nt_name").value.trim();
+  const email=document.getElementById("nt_email").value.trim();
+  const pass=document.getElementById("nt_pass").value;
+  const status=document.getElementById("addTeacherStatus");
+  if(!name||!email||!pass) { status.textContent="Fill in all fields."; return; }
+  if(pass.length<6){ status.textContent="Password must be at least 6 characters."; return; }
+  status.textContent="Creating account…";
+  try{
+    const cred = await secondaryAuth.createUserWithEmailAndPassword(email, pass);
+    await firestore.collection("staff").doc(cred.user.uid).set({ name, email, role:"teacher", createdAt:Date.now() });
+    await secondaryAuth.signOut();
+    status.textContent = `Added ${name}. Share this email and password with them to sign in.`;
+    logActivity("add", "staff", name);
+  }catch(e){
+    status.textContent = "Failed: " + e.message;
+  }
+}
+
+// ---------------- FINANCE & AUDIT (admin only) ----------------
+// KP primary-school PTC grants, in the three categories approved by the KP cabinet (reported June 2026).
+// Default rates are editable on the page because the official notification may differ.
+const FUNDS=[
+  {k:"consumables", name:"Classroom consumables grant", unit:"classroom", rate:13000},
+  {k:"repair", name:"Repair grant", unit:"classroom", rate:16000},
+  {k:"capitation", name:"Student capitation grant", unit:"student", rate:300}
+];
+let finances=[], finSettings={classrooms:0, rates:{}}, finFilter="";
+function finRate(f){ const r=Number((finSettings.rates||{})[f.k]); return r>0 ? r : f.rate; }
+function finStats(){
+  const live=finances.filter(x=>!x.archived), activeN=students.filter(s=>!s.archived).length, cr=Number(finSettings.classrooms)||0;
+  return FUNDS.map(f=>{
+    const sum=kind=>live.filter(x=>x.fund===f.k && x.kind===kind).reduce((a,x)=>a+(Number(x.amount)||0),0);
+    const units=f.unit==="classroom" ? cr : activeN, rate=finRate(f), rec=sum("receipt"), sp=sum("expense");
+    return {f, units, rate, ent:units*rate, rec, sp, bal:rec-sp};
+  });
+}
+function viewFinance(){
+  const st=finStats(), live=finances.filter(x=>!x.archived), fname=k=>(FUNDS.find(f=>f.k===k)||{name:k||"-"}).name;
+  const kpis=st.map((x,i)=>`<div class="kpi ${["k-blue","k-violet","k-teal"][i]}"><div class="ico">${icon("finance")}</div><div><div class="big">${money(x.bal)}</div><div class="lbl">${esc(x.f.name)} · balance</div></div></div>`).join("");
+  const rows=st.map(x=>`<tr><td>${esc(x.f.name)}<div class="meta">${x.units} ${x.f.unit}${x.units===1?"":"s"} × ${money(x.rate)}</div></td><td>${money(x.ent)}</td><td>${money(x.rec)}</td><td>${money(x.sp)}</td><td>${x.bal<0?`<span class="chip-red">${money(x.bal)}</span>`:money(x.bal)}</td><td>${x.rec?Math.round(x.sp/x.rec*100)+"%":"-"}</td></tr>`).join("");
+  const noRef=live.filter(x=>x.kind==="expense" && !(x.ref||"").trim()).length, noNote=live.filter(x=>!(x.note||"").trim()).length;
+  const over=st.filter(x=>x.sp>x.rec), short=st.filter(x=>x.ent>0 && x.rec<x.ent);
+  const checks=[
+    [noRef===0, noRef ? `${noRef} expense(s) have no voucher or cheque number.` : "Every expense has a voucher or cheque number."],
+    [noNote===0, noNote ? `${noNote} entr${noNote===1?"y has":"ies have"} no description.` : "Every entry has a description."],
+    [over.length===0, over.length ? `Spending is more than receipts for: ${over.map(x=>x.f.name).join(", ")}.` : "No fund is overspent."],
+    [short.length===0, short.length ? `Receipts are below the expected amount for: ${short.map(x=>x.f.name).join(", ")}.` : "Receipts match the expected amounts."]
+  ].map(([ok,m])=>`<div class="li"><span>${ok?'<span class="pill pill-ok">OK</span>':'<span class="pill pill-warn">Check</span>'} ${esc(m)}</span></div>`).join("");
+  const list=live.filter(x=>!finFilter || x.fund===finFilter);
+  const lrows=list.map(x=>`<tr><td>${esc(x.date||"-")}</td><td>${esc(fname(x.fund))}</td><td>${x.kind==="receipt"?'<span class="pill pill-ok">Receipt</span>':'<span class="pill pill-warn">Expense</span>'}</td><td>${money(x.amount)}</td><td>${esc(x.ref||"-")}</td><td>${esc(x.note||"-")}</td><td>${esc(x.by||"-")}</td><td><button class="btn-danger" type="button" data-finarch="${x.id}">Remove</button></td></tr>`).join("");
+  return `
+    <div class="dashgrid">${kpis}</div>
+    <div class="card"><h2>Fund summary</h2>
+      <div class="table-wrap"><table><tr><th>Fund</th><th>Expected</th><th>Received</th><th>Spent</th><th>Balance</th><th>Used</th></tr>${rows}</table></div>
+      <p class="sub">Expected = classrooms or students × rate. Students are counted from your active roster.</p>
+    </div>
+    <div class="card"><h2>Audit checks</h2>${checks}</div>
+    <div class="card"><h2>Fund settings</h2>
+      <p class="sub">The three PTC grants for government schools in Khyber Pakhtunkhwa. The default rates come from a news report on the cabinet decision; please confirm them against your department's notification and change them here if they differ.</p>
+      <div class="row">
+        <div><label>Number of classrooms</label><input id="fin_cr" type="number" min="0" value="${Number(finSettings.classrooms)||0}"></div>
+        ${FUNDS.map(f=>`<div><label>${esc(f.name)} (Rs. per ${f.unit})</label><input id="fin_rate_${f.k}" type="number" min="0" value="${finRate(f)}"></div>`).join("")}
+      </div>
+      <button class="btn-primary" id="saveFinSettingsBtn" type="button">Save settings</button>
+    </div>
+    <div class="card"><h2>Add a receipt or expense</h2>
+      <div class="row">
+        <div><label>Fund</label><select id="fin_fund"><option value="">-- choose --</option>${FUNDS.map(f=>`<option value="${f.k}">${esc(f.name)}</option>`).join("")}</select></div>
+        <div><label>Type</label><select id="fin_kind"><option value="receipt">Receipt (money received)</option><option value="expense">Expense (money spent)</option></select></div>
+        <div><label>Amount (Rs.)</label><input id="fin_amt" type="number" min="0"></div>
+        <div><label>Date</label><input id="fin_date" type="date" value="${todayStr()}"></div>
+      </div>
+      <div class="row">
+        <div><label>Voucher / cheque no.</label><input id="fin_ref" placeholder="Needed for every expense"></div>
+        <div><label>Description</label><input id="fin_note" placeholder="e.g. Chalk and registers"></div>
+      </div>
+      <div id="fin_err" class="field-err" role="alert"></div>
+      <button class="btn-primary" id="addFinBtn" type="button">Save entry</button>
+    </div>
+    <div class="card"><h2>Ledger</h2>
+      <div class="row"><div><label>Show fund</label><select id="finFilter"><option value="">All funds</option>${FUNDS.map(f=>`<option value="${f.k}" ${finFilter===f.k?"selected":""}>${esc(f.name)}</option>`).join("")}</select></div></div>
+      ${list.length ? `<div class="table-wrap"><table><tr><th>Date</th><th>Fund</th><th>Type</th><th>Amount</th><th>Voucher</th><th>Description</th><th>By</th><th></th></tr>${lrows}</table></div>` : `<div class="empty">No entries yet. Add the first receipt above.</div>`}
+      <button class="btn-sm" id="downloadFinBtn" type="button" style="margin-top:10px;">Download ledger (.csv)</button>
+      <p class="sub">If saving fails with "permission denied", ask your developer to allow the finance and financeSettings collections in your Firestore rules.</p>
+    </div>`;
+}
+function downloadFinanceCsv(){
+  const fname=k=>(FUNDS.find(f=>f.k===k)||{name:k||""}).name;
+  const rows=finances.filter(x=>!x.archived).map(x=>[x.date||"",fname(x.fund),x.kind||"",x.amount||0,x.ref||"",x.note||"",x.by||""].map(v=>`"${(v+"").replace(/"/g,'""')}"`).join(","));
+  downloadBlob("Date,Fund,Type,Amount,Voucher,Description,Entered by\n"+rows.join("\n"),"text/csv","gps-khankot-finance-"+todayStr()+".csv");
+}
+
+// ---------------- BACKUP ----------------
+function viewBackup(){
+  return `
+    <div class="card">
+      <h2>Bulk import students (CSV or Excel)</h2>
+      <p class="sub">Upload a .csv or .xlsx file with a header row: Name, FatherName, Class, GuardianContact, RollNo, AdmissionNo, DOB, BloodGroup, EmergencyContact, Gender (only Name and Class are required). Importing a file again never duplicates students; it updates Gender and Father name on the ones already added. Class must exactly match one of: ${CLASS_LIST.join(", ")}.</p>
+      <button class="btn-sm" id="downloadTemplateBtn">Download CSV template</button>
+      <button class="btn-sm" id="downloadXlsxBtn">Download Excel template</button>
+      <input type="file" id="importFile" accept=".csv,.xlsx,.xls" style="margin-top:10px;">
+      <button class="btn-accent2" id="importBtn" style="margin-top:8px;">Import students</button>
+      <div id="importStatus" class="sub"></div>
+    </div>
+    <div class="card">
+      <h2>Load demo data (for testing)</h2>
+      <p class="sub">Adds 8 sample students with attendance, grades, fine entries, homework, notices, a parent message, and a timetable.</p>
+      <button class="btn-accent2" id="seedDemoBtn">Load demo data</button>
+    </div>
+    <div class="card">
+      <h2>Find & remove duplicate students</h2>
+      <p class="sub">Finds students with the same name, class, and roll number (e.g. from importing the same file twice) and removes the extra copies, keeping one of each.</p>
+      <button class="btn-danger" id="dedupeBtn">Find & remove duplicates</button>
+      <div id="dedupeStatus" class="sub"></div>
+    </div>
+    <div class="card">
+      <h2>Remove demo data</h2>
+      <p class="sub">Deletes only the 8 sample students, 3 sample homework posts, and 2 sample notices created by "Load demo data" above — matched precisely, so your real students are never touched. Permanent, not an archive.</p>
+      <button class="btn-danger" id="removeDemoBtn">Remove demo data</button>
+    </div>
+    <div class="card">
+      <h2>Download backups</h2>
+      <button class="btn-primary" id="downloadBackupBtn">Download full backup (.json)</button>
+      <button class="btn-primary" id="downloadCsvBtn">Download roster (.csv)</button>
+    </div>
+    ${CURRENT_ROLE==="admin" ? `
+    <div class="card">
+      <h2>Restore from backup (admin only)</h2>
+      <p class="sub">Uploads a previously downloaded .json backup and writes it back into the database. Best used on a database that's empty or being recovered — running it on top of existing data may create duplicates in homework/notices.</p>
+      <input type="file" id="restoreFile" accept="application/json">
+      <button class="btn-danger" id="restoreBtn" style="margin-top:8px;">Restore from file</button>
+    </div>` : ""}
+    <div class="card">
+      <h2>Why your data is already safe</h2>
+      <p class="sub">• Records are stored on Google's Firestore — a durable, replicated database, not a single device.<br>
+      • "Archive" never permanently deletes — archived items can be restored (Students → Archived section).<br>
+      • Only admins can permanently delete or restore from a backup file.</p>
+    </div>
+  `;
+}
+
+function parseCsv(text){
+  const lines = text.split(/\r?\n/).filter(l=>l.trim().length);
+  return lines.map(l=>l.split(",").map(c=>c.trim().replace(/^"|"$/g,"")));
+}
+
+async function readRowsFromFile(file){
+  const ext = file.name.split(".").pop().toLowerCase();
+  if(ext==="csv"){
+    const text = await file.text();
+    return parseCsv(text);
+  }
+  const buf = await file.arrayBuffer();
+  const wb = XLSX.read(buf, {type:"array"});
+  const ws = wb.Sheets[wb.SheetNames[0]];
+  const rows = XLSX.utils.sheet_to_json(ws, {header:1, defval:"", raw:false});
+  return rows.filter(r=>r.length && r.some(c=>String(c).trim()!=="")).map(r=>r.map(c=>String(c).trim()));
+}
+
+async function importStudentsCsv(){
+  const fileInput = document.getElementById("importFile");
+  const status = document.getElementById("importStatus");
+  const file = fileInput.files[0];
+  if(!file){ setMsg("importStatus", "Choose a CSV or Excel file first."); return; }
+  const rows = await readRowsFromFile(file);
+  const header = rows[0].map(h=>h.toLowerCase());
+  const idx = (name)=>header.indexOf(name.toLowerCase());
+  const iName=idx("name"), iClass=idx("class"), iGuardian=idx("guardiancontact"), iRoll=idx("rollno"), iAdm=idx("admissionno"), iDob=idx("dob"), iBlood=idx("bloodgroup"), iEmerg=idx("emergencycontact"), iGender=idx("gender"), iFather=Math.max(idx("fathername"), idx("father name"), idx("father"));
+  if(iName<0 || iClass<0){ setMsg("importStatus", "CSV must have at least Name and Class columns."); return; }
+  const existingByKey = new Map(students.filter(s=>!s.archived).map(s=>[dupeKey(s), s]));
+  const normGender = (v)=>{ const t=(v||"").toString().trim().toLowerCase(); return t.startsWith("m")?"Male":t.startsWith("f")?"Female":""; };
+  let count=0, skipped=0, duplicates=0, updated=0;
+  setMsg("importStatus", "Importing…");
+  for(let i=1;i<rows.length;i++){
+    const r = rows[i];
+    const name = r[iName]; const className = r[iClass];
+    if(!name || !CLASS_LIST.includes(className)){ skipped++; continue; }
+    const rollNo = iRoll>=0 ? (r[iRoll]||"") : "";
+    const key = name.trim().toLowerCase()+"|"+className+"|"+rollNo.trim();
+    const gender = iGender>=0 ? normGender(r[iGender]) : "";
+    const fatherName = iFather>=0 ? (r[iFather]||"").trim() : "";
+    if(existingByKey.has(key)){
+      const ex = existingByKey.get(key);
+      const patch = {};
+      if(gender && ex.gender!==gender) patch.gender = gender;
+      if(fatherName && ex.fatherName!==fatherName) patch.fatherName = fatherName;
+      if(ex.id && Object.keys(patch).length){ await db.doc("students/"+ex.id).update(patch); Object.assign(ex, patch); updated++; }
+      else { duplicates++; }
+      continue;
+    }
+    existingByKey.set(key, {id:null, gender, fatherName});
+    await db.collection("students").add({
+      name, className,
+      guardianContact: iGuardian>=0 ? (r[iGuardian]||"") : "",
+      rollNo: iRoll>=0 ? (r[iRoll]||"") : "",
+      admissionNo: iAdm>=0 ? (r[iAdm]||"") : "",
+      dob: iDob>=0 ? (r[iDob]||"") : "",
+      bloodGroup: iBlood>=0 ? (r[iBlood]||"") : "",
+      emergencyContact: iEmerg>=0 ? (r[iEmerg]||"") : "",
+      gender,
+      fatherName,
+      fine:{amount:0,reason:"",paid:true}, grades:{}, attendance:{}, messages:[]
+    });
+    count++;
+  }
+  let msg = `Imported ${count} student(s)`;
+  if(updated) msg += `, updated gender / father name for ${updated} existing student(s)`;
+  if(duplicates) msg += `, skipped ${duplicates} already-existing duplicate(s)`;
+  if(skipped) msg += `, skipped ${skipped} row(s) with missing name or an unrecognized class name`;
+  setMsg("importStatus", msg + ".");
+}
+
+function downloadCsvTemplate(){
+  const header = "Name,FatherName,Class,GuardianContact,RollNo,AdmissionNo,DOB,BloodGroup,EmergencyContact,Gender\n";
+  const sample = `Ahmed Ali,Muhammad Ali,Class 1,0300-0000000,21,GPS-2026-021,2019-05-14,O+,0300-1111111,Male\n`;
+  downloadBlob(header+sample, "text/csv", "gps-khankot-import-template.csv");
+}
+
+function downloadExcelTemplate(){
+  if(typeof XLSX==="undefined"){ alert("The Excel library did not load. Check your internet connection and try again."); return; }
+  const header = ["Name","FatherName","Class","GuardianContact","RollNo","AdmissionNo","DOB","BloodGroup","EmergencyContact","Gender"];
+  const rows = [
+    header,
+    ["Ahmed Ali","Muhammad Ali","Class 1","0300-0000000","21","GPS-2026-021","2019-05-14","O+","0300-1111111","Male"],
+    ["Ayesha Noor","Noor Muhammad","Class 1","0301-0000000","22","GPS-2026-022","2019-08-02","A+","","Female"]
+  ];
+  const ws = XLSX.utils.aoa_to_sheet(rows);
+  ws["!cols"] = header.map(h=>({wch: Math.max(14, h.length+4)}));
+  const notes = XLSX.utils.aoa_to_sheet([
+    ["Instructions"],
+    ["Name and Class are required. Every other column is optional."],
+    ["Class must be exactly one of: " + CLASS_LIST.join(", ")],
+    ["Gender: Male or Female (M or F also works)."],
+    ["DOB format: YYYY-MM-DD, for example 2019-05-14."],
+    ["Delete the two sample rows before importing your real students."],
+    ["Importing the same file again never creates duplicates; it only updates Gender and Father name."]
+  ]);
+  notes["!cols"] = [{wch:90}];
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, "Students");
+  XLSX.utils.book_append_sheet(wb, notes, "Instructions");
+  XLSX.writeFile(wb, "gps-khankot-import-template.xlsx");
+}
+
+function dupeKey(s){
+  return (s.name||"").trim().toLowerCase()+"|"+(s.className||"")+"|"+(s.rollNo||"").trim();
+}
+
+async function findAndRemoveDuplicates(){
+  const status = document.getElementById("dedupeStatus");
+  const groups = {};
+  students.filter(s=>!s.archived).forEach(s=>{
+    const k = dupeKey(s);
+    (groups[k] = groups[k]||[]).push(s);
+  });
+  const dupeGroups = Object.values(groups).filter(g=>g.length>1);
+  const toRemove = dupeGroups.flatMap(g=>g.slice(1));
+  if(!toRemove.length){ setMsg("dedupeStatus", "No duplicates found."); return; }
+  if(!await askConfirm(`Found ${toRemove.length} duplicate record(s) across ${dupeGroups.length} student(s). Remove the extra copies? This keeps one copy of each and permanently deletes the rest.`)) return;
+  setMsg("dedupeStatus", "Removing…");
+  for(const s of toRemove){ await firestore.collection("students").doc(s.id).delete(); }
+  logActivity("delete", "duplicates", `Removed ${toRemove.length} duplicate students`);
+  setMsg("dedupeStatus", `Removed ${toRemove.length} duplicate record(s).`);
+}
+
+async function removeDemoData(){
+  const btn = document.getElementById("removeDemoBtn");
+  if(!await askConfirm("Permanently delete the demo students, demo homework, and demo notices? Your real students and real data are matched precisely and will NOT be touched.")) return;
+  setMsg("removeDemoBtn", "Removing…");
+  const demoPairs = [
+    ["Ayesha Khan","0300-1234567"],["Bilal Ahmed","0301-2345678"],["Sara Malik","0302-3456789"],
+    ["Hamza Iqbal","0303-4567890"],["Zainab Tariq","0304-5678901"],["Ali Raza","0305-6789012"],
+    ["Fatima Noor","0306-7890123"],["Usman Sheikh","0307-8901234"]
+  ];
+  let removed=0;
+  for(const s of students){
+    if(demoPairs.some(([n,g])=>s.name===n && s.guardianContact===g)){
+      await firestore.collection("students").doc(s.id).delete();
+      removed++;
+    }
+  }
+  const demoHwDescriptions = [
+    "Complete worksheet pages 10-12",
+    "Write 10 sentences using new vocabulary words",
+    "Prepare a short presentation on the water cycle"
+  ];
+  for(const h of homework){
+    if(demoHwDescriptions.includes(h.description)){ await firestore.collection("homework").doc(h.id).delete(); }
+  }
+  const demoNoticeTitles = ["Parent-Teacher meeting","School closed for holiday"];
+  for(const n of notices){
+    if(demoNoticeTitles.includes(n.title)){ await firestore.collection("notices").doc(n.id).delete(); }
+  }
+  const demoCells = {"Class 1_Mon_1":"Math","Class 1_Mon_2":"English","Class 1_Tue_1":"Science"};
+  const grid = {...(ttDoc.grid||{})};
+  let gridChanged=false;
+  Object.keys(demoCells).forEach(k=>{ if(grid[k]===demoCells[k]){ delete grid[k]; gridChanged=true; } });
+  if(gridChanged) await firestore.doc("timetable/main").set({grid});
+  logActivity("delete", "demo-data", `Removed ${removed} demo students`);
+  setMsg("removeDemoBtn", `Removed ${removed} demo student(s) and related demo entries.`);
+}
+
+async function seedDemoData(){
+  const btn = document.getElementById("seedDemoBtn");
+  setMsg("seedDemoBtn", "Loading demo data…");
+  const today = todayStr();
+  const demoStudents = [
+    {name:"Ayesha Khan", className:"Nursery", guardianContact:"0300-1234567", fine:{amount:0,reason:"",paid:true}, grades:{}, attendance:{[today]:"present"}, messages:[]},
+    {name:"Bilal Ahmed", className:"LKG", guardianContact:"0301-2345678", fine:{amount:0,reason:"",paid:true}, grades:{}, attendance:{[today]:"present"}, messages:[]},
+    {name:"Sara Malik", className:"UKG", guardianContact:"0302-3456789", fine:{amount:0,reason:"",paid:true}, grades:{}, attendance:{[today]:"absent"}, messages:[]},
+    {name:"Hamza Iqbal", className:"Class 1", guardianContact:"0303-4567890", fine:{amount:50,reason:"Late to class repeatedly",paid:false}, grades:{Math:{obtained:92,total:100}, English:{obtained:78,total:100}}, attendance:{[today]:"present"}, messages:[]},
+    {name:"Zainab Tariq", className:"Class 2", guardianContact:"0304-5678901", fine:{amount:0,reason:"",paid:true}, grades:{}, attendance:{[today]:"leave"}, messages:[]},
+    {name:"Ali Raza", className:"Class 3", guardianContact:"0305-6789012", fine:{amount:0,reason:"",paid:true}, grades:{}, attendance:{[today]:"present"}, messages:[{text:"Ali is progressing well in reading exercises this week.", at:Date.now()}]},
+    {name:"Fatima Noor", className:"Class 4", guardianContact:"0306-7890123", fine:{amount:100,reason:"Damaged library book",paid:true}, grades:{Science:{obtained:45,total:50}, Urdu:{obtained:88,total:100}}, attendance:{[today]:"absent"}, messages:[]},
+    {name:"Usman Sheikh", className:"Class 5", guardianContact:"0307-8901234", fine:{amount:0,reason:"",paid:true}, grades:{Math:{obtained:70,total:100}}, attendance:{[today]:"present"}, messages:[]}
+  ];
+  for(const s of demoStudents){ await db.collection("students").add(s); }
+  const demoHomework = [
+    {className:"Class 1", subject:"Math", description:"Complete worksheet pages 10-12", dueDate:today, postedAt:Date.now()},
+    {className:"Class 3", subject:"Urdu", description:"Write 10 sentences using new vocabulary words", dueDate:today, postedAt:Date.now()},
+    {className:"Class 5", subject:"Science", description:"Prepare a short presentation on the water cycle", dueDate:today, postedAt:Date.now()}
+  ];
+  for(const h of demoHomework){ await db.collection("homework").add(h); }
+  const demoNotices = [
+    {title:"Parent-Teacher meeting", message:"Parent-Teacher meeting will be held this Friday at 10 AM in the main hall.", postedAt:Date.now()},
+    {title:"School closed for holiday", message:"School will remain closed on Monday for a public holiday.", postedAt:Date.now()}
+  ];
+  for(const n of demoNotices){ await db.collection("notices").add(n); }
+  const demoGrid = {"Class 1_Mon_1":"Math","Class 1_Mon_2":"English","Class 1_Tue_1":"Science"};
+  await db.doc("timetable/main").set({grid: {...(ttDoc.grid||{}), ...demoGrid}});
+  setMsg("seedDemoBtn", "Demo data loaded — check each tab!");
+}
+
+async function downloadFullBackup(){
+  const btn = document.getElementById("downloadBackupBtn");
+  btn.textContent = "Preparing backup…";
+  const hwSnap = await firestore.collection("homework").get();
+  const ntSnap = await firestore.collection("notices").get();
+  const logSnap = await firestore.collection("activityLog").get();
+  const ttSnap = await firestore.doc("timetable/main").get();
+  const finSnap = await firestore.collection("finance").get().catch(()=>({docs:[]}));
+  const backup = {
+    exportedAt: new Date().toISOString(),
+    students: students.map(({id, ...rest})=>({id, ...rest})),
+    homework: hwSnap.docs.map(d=>({id:d.id, ...d.data()})),
+    notices: ntSnap.docs.map(d=>({id:d.id, ...d.data()})),
+    activityLog: logSnap.docs.map(d=>({id:d.id, ...d.data()})),
+    finance: finSnap.docs.map(d=>({id:d.id, ...d.data()})),
+    timetable: ttSnap.exists ? ttSnap.data() : {}
+  };
+  downloadBlob(JSON.stringify(backup, null, 2), "application/json", "gps-khankot-backup-" + todayStr() + ".json");
+  btn.textContent = "Download full backup (.json)";
+}
+
+function downloadRosterCsv(){
+  const today = todayStr();
+  const header = "Roll No,Name,Father Name,Class,Gender,Guardian Contact,Total Fined,Fine Outstanding,Today Attendance\n";
+  const rows = sortByRoll(students.filter(s=>!s.archived)).map(s=>{
+    const t = fineTotals(s);
+    const att = (s.attendance||{})[today] || "unmarked";
+    return [s.rollNo||"", s.name, s.fatherName||"", s.className||"", s.gender||"", s.guardianContact||"", t.total, t.outstanding, att].map(v=>`"${(v+"").replace(/"/g,'""')}"`).join(",");
+  }).join("\n");
+  downloadBlob(header+rows, "text/csv", "gps-khankot-roster-" + today + ".csv");
+}
+
+function downloadBlob(content, type, filename){
+  const blob = new Blob([content], {type});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url; a.download = filename;
+  document.body.appendChild(a); a.click(); a.remove();
+  URL.revokeObjectURL(url);
+}
+
+async function restoreFromBackup(){
+  const fileInput = document.getElementById("restoreFile");
+  const file = fileInput.files[0];
+  if(!file) return alert("Choose a backup .json file first.");
+  const btn = document.getElementById("restoreBtn");
+  setMsg("restoreBtn", "Restoring…");
+  try{
+    const text = await file.text();
+    const data = JSON.parse(text);
+    if(data.students){
+      for(const s of data.students){
+        const {id, ...rest} = s;
+        await firestore.collection("students").doc(id).set(rest);
+      }
+    }
+    if(data.homework) for(const h of data.homework){ const {id, ...rest} = h; await firestore.collection("homework").add(rest); }
+    if(data.notices) for(const n of data.notices){ const {id, ...rest} = n; await firestore.collection("notices").add(rest); }
+    if(data.timetable) await firestore.doc("timetable/main").set(data.timetable);
+    logActivity("restore", "backup", file.name);
+    setMsg("restoreBtn", "Restore complete!");
+  }catch(e){
+    alert("Restore failed: " + e.message);
+    setMsg("restoreBtn", "Restore from file");
+  }
+}
+
+// ---------------- WIRING ----------------
+function wireTab(){
+  if(tab==="dashboard") document.querySelectorAll("[data-goto]").forEach(el=>el.onclick=()=>setTab(el.dataset.goto));
+  if(tab==="classes"){
+    document.querySelectorAll("[data-viewclass]").forEach(el=>el.onclick=()=>{ classFilter=el.dataset.viewclass; setTab("students"); });
+    const promoBtn=document.getElementById("promoteBtn");
+    if(promoBtn) promoBtn.onclick = promoteAllStudents;
+  }
+  if(tab==="students"){
+    document.getElementById("addStudentBtn").onclick = addStudent;
+    document.getElementById("stuClassFilter").onchange = e=>{ classFilter=e.target.value; window.__stuPage=1; renderTabs(); };
+    document.getElementById("stuSort").onchange = e=>{ window.__stuSort=e.target.value; window.__stuPage=1; renderTabs(); };
+    document.querySelectorAll("[data-page]").forEach(el=>el.onclick=()=>{ window.__stuPage=Number(el.dataset.page); renderTabs(); });
+    document.querySelectorAll("[data-editgender]").forEach(el=>el.onchange=async()=>{ const st=students.find(x=>x.id===el.dataset.editgender); if(st && !canEditClass(st.className)){ toast(lockedMsg()); renderTabs(); return; } await db.doc("students/"+el.dataset.editgender).update({gender: el.value}); });
+    let stuSearchTimer;
+    document.getElementById("stuSearch").oninput = e=>{
+      const val = e.target.value;
+      clearTimeout(stuSearchTimer);
+      stuSearchTimer = setTimeout(()=>{ window.__stuSearch=val; window.__stuPage=1; renderTabs(); }, 350);
+    };
+    document.querySelectorAll("[data-open]").forEach(el=>el.onclick=()=>{ selectedStudent=el.dataset.open; setTab("grades"); });
+    document.querySelectorAll("[data-del]").forEach(el=>el.onclick=async()=>{
+      const st=students.find(x=>x.id===el.dataset.del); if(st && !canEditClass(st.className)){ toast(lockedMsg()); return; }
+      if(!await askConfirm("Archive this student? They'll be hidden from the roster but ALL their data stays saved and can be restored anytime.")) return;
+      await db.doc("students/"+el.dataset.del).update({archived:true, archivedAt:Date.now()});
+    });
+    document.querySelectorAll("[data-harddel]").forEach(el=>el.onclick=async()=>{
+      const stu=students.find(s=>s.id===el.dataset.harddel);
+      if(!await askConfirm(`This PERMANENTLY erases ${stu?stu.name:"this student"} and all their records. This cannot be undone.`,"DELETE")) return;
+      try{ await db.doc("students/"+el.dataset.harddel).delete(); toast((stu?stu.name:"Student")+" deleted."); }
+      catch(e){ toast("Could not delete: "+(e.message||e.code||e)); }
+    });
+    document.querySelectorAll("[data-restore]").forEach(el=>el.onclick=async()=>{
+      const st=students.find(x=>x.id===el.dataset.restore); if(st && !canEditClass(st.className)){ toast(lockedMsg()); return; }
+      await db.doc("students/"+el.dataset.restore).update({archived:false});
+    });
+  }
+  if(tab==="attendance"){
+    document.querySelectorAll("[data-genderbtn]").forEach(el=>el.onclick=()=>{ genderFilter=el.dataset.genderbtn; renderTabs(); });
+    document.getElementById("attDatePick").onchange = e=>{ attDate=e.target.value; renderTabs(); };
+    document.getElementById("attClassPick").onchange = e=>{ classFilter=e.target.value; renderTabs(); };
+    document.querySelectorAll("[data-att]").forEach(el=>el.onclick=async()=>{
+      const [id,status]=el.dataset.att.split("|");
+      const stu=students.find(s=>s.id===id);
+      if(!stu) return;
+      if(!canEditClass(stu.className)){ toast(lockedMsg()); return; }
+      const prev=(stu.attendance||{})[attDate];
+      if(prev===status) return;
+      if(prev && !await askConfirm(`${stu.name} is already marked "${prev}" for ${attDate}. Change it to "${status}"?`)) return;
+      const attendance={...(stu.attendance||{}), [attDate]:status};
+      const upd={attendance}; let note="";
+      const fAmt=AUTO_ABSENT_FINE[stu.className]||0, fid="auto-absent-"+attDate, fe=fineEntries(stu);
+      const outOf=arr=>arr.filter(x=>!x.paid).reduce((a,x)=>a+(Number(x.amount)||0),0);
+      if(status==="absent" && fAmt && !fe.some(x=>x.id===fid)){
+        const entries=[...fe.map(x=>({...x})), {id:fid, amount:fAmt, reason:"Absent on "+attDate+" (automatic)", date:attDate, paid:false}];
+        upd.fines=entries; upd.fine={amount:outOf(entries), reason:"Absent on "+attDate+" (automatic)", paid:false};
+        note=" — fine Rs. "+fAmt+" added";
+      } else if(prev==="absent" && status!=="absent" && fe.some(x=>x.id===fid && !x.paid)){
+        const entries=fe.filter(x=>x.id!==fid).map(x=>({...x}));
+        upd.fines=entries; upd.fine={amount:outOf(entries), reason:entries.length?(entries[entries.length-1].reason||""):"", paid:outOf(entries)===0};
+        note=" — automatic fine removed";
+      }
+      await db.doc("students/"+id).update(upd);
+      toast("Saved: "+stu.name+" — "+status+note);
+    });
+  }
+  if(tab==="grades"){
+    document.getElementById("gradeClassPick").onchange = e=>{ classFilter=e.target.value; selectedStudent=null; renderTabs(); };
+    document.getElementById("gradeStudentPick").onchange = e=>{ selectedStudent=e.target.value||null; renderTabs(); };
+    const termPick=document.getElementById("termPick");
+    if(termPick) termPick.onchange = e=>{ selectedTerm=e.target.value; renderTabs(); };
+    const addBtn=document.getElementById("addGradeBtn");
+    if(addBtn) addBtn.onclick=async()=>{
+      const subj=document.getElementById("g_subject").value.trim();
+      const obtained=document.getElementById("g_value").value.trim();
+      const total=document.getElementById("g_total").value.trim();
+      if(!subj||!obtained) return;
+      if(total && Number(obtained)>Number(total)){ toast("Marks obtained cannot be more than total marks."); return; }
+      const stu=students.find(s=>s.id===selectedStudent);
+      const termGrades={...(stu.grades && stu.grades[selectedTerm] || {}), [subj]:{obtained:Number(obtained), total: total?Number(total):null}};
+      const grades={...(stu.grades||{}), [selectedTerm]:termGrades};
+      await db.doc("students/"+selectedStudent).update({grades});
+    };
+    document.querySelectorAll("[data-delgrade]").forEach(el=>el.onclick=async()=>{
+      if(!await askConfirm("Remove this grade entry?")) return;
+      const stu=students.find(s=>s.id===selectedStudent);
+      const termGrades={...(stu.grades && stu.grades[selectedTerm] || {})}; delete termGrades[el.dataset.delgrade];
+      const grades={...(stu.grades||{}), [selectedTerm]:termGrades};
+      await db.doc("students/"+selectedStudent).update({grades});
+    });
+    document.querySelectorAll("[data-editgrade]").forEach(el=>el.onchange=async()=>{
+      const [subj, field] = el.dataset.editgrade.split("|");
+      const stu=students.find(s=>s.id===selectedStudent);
+      const termGrades={...(stu.grades && stu.grades[selectedTerm] || {})};
+      const current = termGrades[subj] && typeof termGrades[subj]==="object" ? termGrades[subj] : {obtained:0,total:null};
+      termGrades[subj] = {...current, [field]: el.value===""?null:Number(el.value)};
+      const grades={...(stu.grades||{}), [selectedTerm]:termGrades};
+      await db.doc("students/"+selectedStudent).update({grades});
+    });
+    const printBtn=document.getElementById("printReportBtn");
+    if(printBtn) printBtn.onclick=()=>{ const stu=students.find(s=>s.id===selectedStudent); if(stu) printReportCard(stu); };
+    document.querySelectorAll("[data-editstu]").forEach(el=>el.onchange=async()=>{
+      const cur=students.find(x=>x.id===selectedStudent);
+      if((cur && !canEditClass(cur.className)) || (el.dataset.editstu==="className" && !canEditClass(el.value))){ toast(lockedMsg()); renderTabs(); return; }
+      const field = el.dataset.editstu;
+      const val = el.value.trim ? el.value.trim() : el.value;
+      if(field==="name" && !val){ alert("Name can't be empty."); renderTabs(); return; }
+      await db.doc("students/"+selectedStudent).update({[field]: val});
+    });
+    const uploadBtn=document.getElementById("uploadPhotoBtn");
+    if(uploadBtn) uploadBtn.onclick=async()=>{
+      const cur=students.find(x=>x.id===selectedStudent); if(cur && !canEditClass(cur.className)){ toast(lockedMsg()); return; }
+      const file=document.getElementById("photoFile").files[0];
+      if(!file) return alert("Choose an image first.");
+      uploadBtn.textContent="Uploading…";
+      try{ await uploadStudentPhoto(selectedStudent, file); }
+      catch(e){ alert("Upload failed: "+e.message); }
+      uploadBtn.textContent="Upload photo";
+    };
+    const parentBtn=document.getElementById("parentSummaryBtn");
+    if(parentBtn) parentBtn.onclick=()=>{ const stu=students.find(s=>s.id===selectedStudent); if(stu) printParentSummary(stu); };
+    const parentWaBtn=document.getElementById("parentWaBtn");
+    if(parentWaBtn) parentWaBtn.onclick=()=>{ const stu=students.find(s=>s.id===selectedStudent); if(stu) shareParentSummaryWhatsApp(stu); };
+  }
+  if(tab==="fine"){
+    document.querySelectorAll("[data-classbtn]").forEach(el=>el.onclick=()=>{ classFilter=el.dataset.classbtn; renderTabs(); });
+    document.querySelectorAll("[data-finesub]").forEach(el=>el.onclick=()=>{ fineSubTab=el.dataset.finesub; renderTabs(); });
+    document.querySelectorAll("[data-finestu]").forEach(el=>el.onclick=()=>{ fineStudent=el.dataset.finestu; fineSubTab="register"; renderTabs(); });
+    const mp=document.getElementById("fineMonthPick"); if(mp) mp.onchange=e=>{ if(e.target.value){ fineMonth=e.target.value; renderTabs(); } };
+    const yp=document.getElementById("fineYearPick"); if(yp) yp.onchange=e=>{ if(e.target.value){ fineYear=e.target.value; renderTabs(); } };
+    const pick=document.getElementById("fineStudentPick"); if(pick) pick.onchange=e=>{ fineStudent=e.target.value||null; };
+    const addBtn=document.getElementById("addFineBtn");
+    if(addBtn) addBtn.onclick=async()=>{
+      const id=document.getElementById("fineStudentPick").value;
+      const amount=Number(document.getElementById("fineAmount").value);
+      const reason=document.getElementById("fineReason").value.trim();
+      const date=document.getElementById("fineDate").value || todayStr();
+      if(!id){ alert("Choose a student first."); return; }
+      if(!(amount>0)){ alert("Enter a fine amount greater than 0."); return; }
+      const stu=students.find(s=>s.id===id);
+      const entries=[...fineEntries(stu).map(x=>({...x})), {id:"f"+Date.now().toString(36)+Math.random().toString(36).slice(2,5), amount, reason, date, paid:false}];
+      fineStudent=id;
+      await saveFineEntries(id, entries);
+    };
+    document.querySelectorAll("[data-fineedit]").forEach(el=>el.onchange=async()=>{
+      const [id, field]=el.dataset.fineedit.split("|");
+      const stu=students.find(s=>s.id===fineStudent); if(!stu) return;
+      const entries=fineEntries(stu).map(x=>x.id===id ? {...x, [field]: field==="amount" ? (Number(el.value)||0) : el.value.trim()} : {...x});
+      await saveFineEntries(fineStudent, entries);
+    });
+    document.querySelectorAll("[data-finetoggle]").forEach(el=>el.onclick=async()=>{
+      const stu=students.find(s=>s.id===fineStudent); if(!stu) return;
+      if(!await askConfirm("Change the payment status of this fine?")) return;
+      const entries=fineEntries(stu).map(x=>x.id===el.dataset.finetoggle ? {...x, paid:!x.paid} : {...x});
+      await saveFineEntries(fineStudent, entries);
+    });
+    document.querySelectorAll("[data-fineremove]").forEach(el=>el.onclick=async()=>{
+      if(!await askConfirm("Remove this fine entry? It is permanently deleted from this student's record.")) return;
+      const stu=students.find(s=>s.id===fineStudent); if(!stu) return;
+      const entries=fineEntries(stu).filter(x=>x.id!==el.dataset.fineremove).map(x=>({...x}));
+      await saveFineEntries(fineStudent, entries);
+    });
+    const dfb=document.getElementById("downloadFinesBtn"); if(dfb) dfb.onclick=downloadFinesCsv;
+  }
+  if(tab==="homework"){
+    document.getElementById("hwClassPick").onchange = e=>{ classFilter=e.target.value; renderTabs(); };
+    document.getElementById("postHwBtn").onclick=async()=>{
+      const className=document.getElementById("hw_class").value;
+      const subject=document.getElementById("hw_subject").value.trim();
+      const description=document.getElementById("hw_desc").value.trim();
+      const dueDate=document.getElementById("hw_due").value;
+      if(!subject||!description) return;
+      await db.collection("homework").add({className, subject, description, dueDate, postedAt:Date.now()});
+    };
+    document.querySelectorAll("[data-delhw]").forEach(el=>el.onclick=async()=>{
+      if(!await askConfirm("Archive this homework entry?")) return;
+      await db.doc("homework/"+el.dataset.delhw).update({archived:true});
+    });
+    document.querySelectorAll("[data-edithw]").forEach(el=>el.onchange=async()=>{
+      const [id, field] = el.dataset.edithw.split("|");
+      await db.doc("homework/"+id).update({[field]: el.value});
+    });
+  }
+  if(tab==="notices"){
+    document.getElementById("postNoticeBtn").onclick=async()=>{
+      const title=document.getElementById("nt_title").value.trim();
+      const message=document.getElementById("nt_msg").value.trim();
+      if(!title||!message) return;
+      await db.collection("notices").add({title, message, postedAt:Date.now()});
+    };
+    document.querySelectorAll("[data-delnotice]").forEach(el=>el.onclick=async()=>{
+      if(!await askConfirm("Archive this notice?")) return;
+      await db.doc("notices/"+el.dataset.delnotice).update({archived:true});
+    });
+    document.querySelectorAll("[data-editnotice]").forEach(el=>el.onchange=async()=>{
+      const [id, field] = el.dataset.editnotice.split("|");
+      await db.doc("notices/"+id).update({[field]: el.value});
+    });
+  }
+  if(tab==="messages"){
+    document.getElementById("msgStudentPick").onchange = e=>{ selectedStudent=e.target.value||null; renderTabs(); };
+    const sendBtn=document.getElementById("sendMsgBtn");
+    if(sendBtn) sendBtn.onclick=async()=>{
+      const text=document.getElementById("msgText").value.trim();
+      if(!text) return;
+      const stu=students.find(s=>s.id===selectedStudent);
+      const messages=[...(stu.messages||[]), {text, at:Date.now()}];
+      await db.doc("students/"+selectedStudent).update({messages});
+    };
+    const waBtn=document.getElementById("waMsgBtn");
+    if(waBtn) waBtn.onclick=()=>{
+      const stu=students.find(s=>s.id===selectedStudent);
+      const text=document.getElementById("msgText").value.trim() || "Hello, this is a message from GPS Khankot.";
+      const digits = phoneDigits(stu.guardianContact);
+      window.open(`https://wa.me/${digits}?text=${encodeURIComponent(text)}`, "_blank");
+    };
+  }
+  if(tab==="timetable"){
+    document.getElementById("ttClassPick").onchange = e=>{ classFilter=e.target.value; renderTabs(); };
+    document.querySelectorAll(".tt-cell").forEach(el=>{
+      let saveTimer;
+      el.oninput = ()=>{
+        clearTimeout(saveTimer);
+        saveTimer = setTimeout(async ()=>{
+          const grid={...(ttDoc.grid||{})};
+          const key = el.dataset.tt;
+          if(el.value.trim()) grid[key]=el.value.trim(); else delete grid[key];
+          await db.doc("timetable/main").set({grid});
+        }, 500);
+      };
+    });
+  }
+  if(tab==="staff"){
+    document.querySelectorAll("[data-staffsub]").forEach(el=>el.onclick=()=>{ staffSubTab=el.dataset.staffsub; renderTabs(); });
+    if(staffSubTab==="attendance"){
+      document.getElementById("staffAttDatePick").onchange = e=>{ staffAttDate=e.target.value; renderTabs(); };
+      document.querySelectorAll("[data-staffatt]").forEach(el=>el.onclick=async()=>{
+        const [id,status]=el.dataset.staffatt.split("|");
+        const st=staffList.find(x=>x.id===id);
+        const attendance={...(st.attendance||{}), [staffAttDate]:status};
+        await firestore.collection("staff").doc(id).update({attendance});
+        logActivity("update", "staff/"+id, "attendance="+status);
+      });
+      return;
+    }
+    document.getElementById("addTeacherBtn").onclick = addTeacher;
+    document.querySelectorAll("[data-rolepick]").forEach(el=>el.onchange=async()=>{
+      await firestore.collection("staff").doc(el.dataset.rolepick).update({role: el.value});
+      logActivity("update", "staff/"+el.dataset.rolepick, "role="+el.value);
+    });
+    document.querySelectorAll("[data-namepick]").forEach(el=>el.onchange=async()=>{
+      await firestore.collection("staff").doc(el.dataset.namepick).update({name: el.value.trim()});
+    });
+    document.querySelectorAll("[data-subjectpick]").forEach(el=>el.onchange=async()=>{
+      await firestore.collection("staff").doc(el.dataset.subjectpick).update({subjectsTaught: el.value.trim()});
+    });
+    document.querySelectorAll("[data-classpick]").forEach(el=>el.onchange=async()=>{
+      await firestore.collection("staff").doc(el.dataset.classpick).update({assignedClass: el.value});
+    });
+    document.querySelectorAll("[data-removestaff]").forEach(el=>el.onclick=async()=>{
+      const st=staffList.find(x=>x.id===el.dataset.removestaff);
+      if(!await askConfirm(`Remove ${st?st.name:"this staff member"}'s profile? They won't appear in the directory, but you must also delete their account in Firebase Console → Authentication to fully block their login.`)) return;
+      await firestore.collection("staff").doc(el.dataset.removestaff).delete();
+      logActivity("delete", "staff/"+el.dataset.removestaff, "");
+    });
+  }
+  if(tab==="finance"){
+    document.getElementById("saveFinSettingsBtn").onclick=async()=>{
+      const rates={}; FUNDS.forEach(f=>{ rates[f.k]=Number(document.getElementById("fin_rate_"+f.k).value)||f.rate; });
+      await db.doc("financeSettings/main").set({classrooms:Number(document.getElementById("fin_cr").value)||0, rates});
+      toast("Settings saved.");
+    };
+    document.getElementById("finFilter").onchange=e=>{ finFilter=e.target.value; renderTabs(); };
+    document.getElementById("addFinBtn").onclick=async()=>{
+      const fund=document.getElementById("fin_fund").value, kind=document.getElementById("fin_kind").value;
+      const amount=Number(document.getElementById("fin_amt").value), date=document.getElementById("fin_date").value||todayStr();
+      const ref=document.getElementById("fin_ref").value.trim(), note=document.getElementById("fin_note").value.trim();
+      if(!fund){ setMsg("fin_err","Choose a fund."); return; }
+      if(!(amount>0)){ setMsg("fin_err","Enter an amount greater than 0."); return; }
+      if(kind==="expense" && !ref){ setMsg("fin_err","Enter the voucher or cheque number for this expense."); return; }
+      setMsg("fin_err","");
+      document.getElementById("addFinBtn").disabled=true;
+      await db.collection("finance").add({fund, kind, amount, date, ref, note, at:Date.now(), by:CURRENT_USER});
+      toast("Entry saved.");
+    };
+    document.querySelectorAll("[data-finarch]").forEach(el=>el.onclick=async()=>{
+      if(!await askConfirm("Remove this entry from the ledger? It is hidden from this list but kept in the database.")) return;
+      await db.doc("finance/"+el.dataset.finarch).update({archived:true, archivedAt:Date.now()});
+    });
+    document.getElementById("downloadFinBtn").onclick=downloadFinanceCsv;
+  }
+  if(tab==="backup"){
+    document.getElementById("downloadTemplateBtn").onclick = downloadCsvTemplate;
+    document.getElementById("downloadXlsxBtn").onclick = downloadExcelTemplate;
+    document.getElementById("importBtn").onclick = importStudentsCsv;
+    document.getElementById("seedDemoBtn").onclick = seedDemoData;
+    document.getElementById("removeDemoBtn").onclick = removeDemoData;
+    document.getElementById("dedupeBtn").onclick = findAndRemoveDuplicates;
+    document.getElementById("downloadBackupBtn").onclick = downloadFullBackup;
+    document.getElementById("downloadCsvBtn").onclick = downloadRosterCsv;
+    const restoreBtn = document.getElementById("restoreBtn");
+    if(restoreBtn) restoreBtn.onclick = restoreFromBackup;
+  }
+}
+</script>
+</body>
+</html>
